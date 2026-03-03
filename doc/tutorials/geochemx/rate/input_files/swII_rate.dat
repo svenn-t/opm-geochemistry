@@ -1,0 +1,49 @@
+Tf  200
+Temp 130
+Pres 800000.0
+Imp 0
+VolRate 0.0266
+Volume 38.31
+NoBlocks 20
+Flush 0.5
+debug 0
+interpolate 1000
+WriteNetCDF 1
+porosity 0.5
+
+
+chemtol
+1e-7 1e-8
+/end
+
+geochem
+solution 0 
+pH 7 charge
+Ca 1e-8
+HCO3 1e-8
+/end
+
+iexchange
+X 0.09
+/ end
+
+rate
+# rate = (k_1*exp(-Ea/Rg)(1/T-1/298.15)+k_2*a_H*exp(-Ea/Rg)(1/T-1/298.15)*(1-SI^n)^m
+#mineral   wt-fraction	Sg   log_af   Ea_1    k_1       Ea_2	k_2	n	m
+calcite 	1	5220	0     37.8e3  1.54e-6	35.4e3	0.52	1	1
+magnesite	0	1	0     60e3    5.48e-11	0.0	0.0	1	1
+anhydrite	0	1	0	0     5e-8	0.0	0.0	1	1
+/ end
+
+solution 1
+--Injected brine
+pH 7 charge
+HCO3	0.002
+Cl	0.1251
+SO4	0.024
+Mg	0.0445
+Ca	0.013
+Na	0.05
+K	0.01
+/end
+/end

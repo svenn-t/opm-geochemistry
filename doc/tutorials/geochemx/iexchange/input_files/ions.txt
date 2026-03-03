@@ -1,0 +1,11 @@
+EXCHANGE_SPECIES
+#name 
+Z+  
+/end
+
+SECONDARY_SPECIES
+SO4Z2 = 2Z+ + SO4-2 / ANA  -0.8 /
+ZNO3   = Z+ + NO3- /ANA -0.7/
+/end
+
+

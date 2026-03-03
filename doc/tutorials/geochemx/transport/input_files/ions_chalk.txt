@@ -1,0 +1,49 @@
+BASIS_SPECIES
+# Name a0 Mw
+SCN- 5 58.08 / HKF 909090 9 /
+Tracer 5 5 /  ANA 0. /
+#Fee+3 /HKF 55.847	9	-4120	-11850	-66.3	-2.4256	-13.6961	11.1141	-2.2127	#19.0459	-6.8233	2.5812/
+Fee+2 /HKF 6 55.847	-21870	-22050	-25.3	-0.7867	-9.6969	9.5479	-2.378	14.786	-4.6437	1.4382 /
+Hdg / HKF 4	0       4236	-1000	13.8	5.1427	4.7758	3.8729	-2.9764	27.6251	5.093	-0.209 /
+Hdg2 4 0 / 0   /   
+/end
+
+SECONDARY_SPECIES 
+# DeltaG	DeltaH	S	a1	a2	a3	a4	c1	c2	omega
+NaX = X- + Na+ / ANA 0. /
+CaX2 = 2X- + Ca+2 / ANA -0.8 /
+MgX2 = 2X- + Mg+2 / ANA -0.6 /
+KX = X- + K+ / ANA -0.7 /
+BaX2 = 2X- + Ba+2 / ANA -0.91 /
+SrX2 = 2X- + Sr+2 / ANA -0.91 /
+#NaSO4- = Na+ + SO4-2 /ANA 20 /
+#HSO4- = H+ + SO4-2 /ANA 2 0 /
+#NaOH = Na+ - H+ + H2O /ANA 20 /
+#GCO3H = GCO3- + H+ /ANA 20/
+#GCaOH = GCa+  - H+ + H2O /ANA 20/
+#GCaSO4 = GCa+ + SO4-2 /ANA -1. /
+#HX = X- + H+ / ANA -4.6 /
+GCO3Mg+ = GCO3- + Mg+2 /HKF   -250200	-275750	-3	3.271	0.206	5.669	-2.788	47.284	9.34	0.599 /
+GCO3Ca+ = GCO3- + Ca+2 /HKF	-274776.5694	-294350	16	3.706	1.267	5.252	-2.831	41.722	8.336	-8 /	
+#GCO3Ca+ = GCO3- + Ca+2 / ANA -3 /
+/end
+
+MINERAL_PHASES
+# HKF = mol_volume	DeltaG	DeltaH	S	a1	a2	a3 a7
+# ANA = mol_volume a0 + a1 * T + a2/T + a3 * logT +a4/T/T
+WITHERITE = Ba+2 + HCO3- - H+ /HKF 45.81 -278400	 -297500	26.8	21.5	11.06 -3.91	/
+Hd = 2H+ + 2Fee+2 - 2Fe+3 /HKF 0	0	0	31.234	6.52	0.78	0.12	3000 /
+NbCb = Na+ + Cl-          /HKF 27.015	-91807	-98260	17.24	10.98	3.9	0	1073/
+Hdg(G) = Hdg                 /HKF 0	0	0	31.234	6.52	0.78	0.12	3000 /
+#ANA:  [mol_volume, a0, a1, a2, a3, a4], where logK =  a0 + a1*T + a2/T + a3*logT + a4/T^2.
+Hdg2(G) = Hdg2 /ANA 0 -9.3114    4.6473e-3   -49.335    1.4341    1.2815e5 /
+/end
+
+#REMOVE_SPECIES
+#NaSO4-
+#GCaOH
+#HSO4-
+#NaOH
+#GCaOH
+#GCO3H
+#/end

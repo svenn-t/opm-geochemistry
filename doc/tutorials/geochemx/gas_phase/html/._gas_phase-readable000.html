@@ -1,0 +1,351 @@
+<!--
+File automatically generated using DocOnce (https://github.com/doconce/doconce/):
+doconce format html main_gas_phase.do.txt --html_style=bootswatch_readable --html_output=gas_phase-readable --html_code_style=inherit
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Modeling gas phase at constant volume - `GAS_PHASE` keyword">
+<title>Modeling gas phase at constant volume - `GAS_PHASE` keyword</title>
+<!-- Bootstrap style: bootswatch_readable -->
+<!-- doconce format html main_gas_phase.do.txt --html_style=bootswatch_readable --html_output=gas_phase-readable --html_code_style=inherit -->
+<link href="https://netdna.bootstrapcdn.com/bootswatch/3.1.1/readable/bootstrap.min.css" rel="stylesheet">
+<!-- not necessary
+<link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+-->
+<style type="text/css">
+/* Let inline verbatim have the same color as the surroundings */
+code { color: inherit; background-color: transparent; }
+/* Add scrollbar to dropdown menus in bootstrap navigation bar */
+.dropdown-menu {
+   height: auto;
+   max-height: 400px;
+   overflow-x: hidden;
+}
+/* Adds an invisible element before each target to offset for the navigation
+   bar */
+.anchor::before {
+  content:"";
+  display:block;
+  height:64px;      /* fixed header height for style bootswatch_readable */
+  margin:-64px 0 0; /* negative fixed header height */
+}
+</style>
+</head>
+
+<!-- tocinfo
+{'highest level': 1,
+ 'sections': [('Table of contents',
+               1,
+               'table_of_contents',
+               'table_of_contents'),
+              ('Equilibrium between a solution and gas phase',
+               1,
+               None,
+               'equilibrium-between-a-solution-and-gas-phase'),
+              ('Input file', 2, None, 'input-file'),
+              ('Description of output', 2, None, 'description-of-output'),
+              ('Appendix: Gas buffers and Peng-Robinson parameters',
+               1,
+               None,
+               'appendix-gas-buffers-and-peng-robinson-parameters'),
+              ('Bibliography', 1, None, 'bibliography')]}
+end of tocinfo -->
+
+<body>
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+     equationNumbers: {  autoNumber: "none"  },
+     extensions: ["AMSmath.js", "AMSsymbols.js", "autobold.js", "color.js"]
+  }
+});
+</script>
+<script type="text/javascript" async
+ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+<!-- newcommands_keep.tex -->
+$$
+\newcommand{\COTW}{\mathrm{CO_2}}
+\newcommand{\HCOT}{\mathrm{HCO_3^-}}
+\newcommand{\Ca}{\mathrm{Ca^{2+}}}
+\newcommand{\Mg}{\mathrm{Mg^{2+}}}
+\newcommand{\nig}{\mathrm{N_2(g)}}
+\newcommand{\htg}{\mathrm{H_2O(g)}}
+\newcommand{\hy}{\mathrm{H_2(g)}}
+\newcommand{\co}{\mathrm{CO_2(g)}}
+\newcommand{\cheq}{\rightleftharpoons}
+$$
+
+
+
+<!-- Bootstrap navigation bar -->
+<div class="navbar navbar-default navbar-fixed-top">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="gas_phase-readable.html">Modeling gas phase at constant volume - `GAS_PHASE` keyword</a>
+  </div>
+  <div class="navbar-collapse collapse navbar-responsive-collapse">
+    <ul class="nav navbar-nav navbar-right">
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+     <!-- navigation toc: --> <li><a href="#table_of_contents" style="font-size: 80%;"><b>Table of contents</b></a></li>
+     <!-- navigation toc: --> <li><a href="#equilibrium-between-a-solution-and-gas-phase" style="font-size: 80%;"><b>Equilibrium between a solution and gas phase</b></a></li>
+     <!-- navigation toc: --> <li><a href="#input-file" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Input file</a></li>
+     <!-- navigation toc: --> <li><a href="#description-of-output" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Description of output</a></li>
+     <!-- navigation toc: --> <li><a href="#appendix-gas-buffers-and-peng-robinson-parameters" style="font-size: 80%;"><b>Appendix: Gas buffers and Peng-Robinson parameters</b></a></li>
+     <!-- navigation toc: --> <li><a href="#bibliography" style="font-size: 80%;"><b>Bibliography</b></a></li>
+
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+</div> <!-- end of navigation bar -->
+<div class="container">
+<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p> <!-- add vertical space -->
+<a name="part0000"></a>
+<!-- ------------------- main content ---------------------- -->
+<div class="jumbotron">
+<center>
+<h1>Modeling gas phase at constant volume - <code>GAS_PHASE</code> keyword </h1>
+</center>  <!-- document title -->
+
+
+</div> <!-- end jumbotron -->
+<h1 id="table_of_contents">Table of contents</h1>
+
+<div class='toc'>
+<p><a href="#equilibrium-between-a-solution-and-gas-phase"> Equilibrium between a solution and gas phase </a></p>
+<p><span class="tab"> <a href="#input-file"> Input file </a></p>
+<p><span class="tab"> <a href="#description-of-output"> Description of output </a></p>
+<p><a href="#appendix-gas-buffers-and-peng-robinson-parameters"> Appendix: Gas buffers and Peng-Robinson parameters </a></p>
+<p><a href="#bibliography"> Bibliography </a></p>
+</div>
+<br>
+<h1 id="equilibrium-between-a-solution-and-gas-phase" class="anchor">Equilibrium between a solution and gas phase </h1>
+<p>This example demonstrates equilibration between an aqueous solution, a mineral assemblage, and a constant-volume gas phase. \( \co \) is generated by mineral reactions, and gas pressure evolves freely as an equilibrium outcome.</p>
+$$
+
+\begin{equation}
+\text{CaMg(CO$_{3}$)$_2$(s)} + 2\text{SiO}_2 \cheq \text{CaMg(Si$_{2}$)O$_6$(s)} + 2\co.
+\tag{1}
+\end{equation}
+$$
+
+
+<div class="alert alert-block alert-success alert-text-normal"><b>Input pressure and partial pressure</b>
+<p>In this example the pressure is unknown before the calculation starts. <code>Pres</code> keyword is only used as an <em>initial guess</em>. Furthermore the partial pressures given in the <code>GAS_PHASE</code> as inputs are converted to moles using the ideal gas law. However, the final gas partial pressures are calculated using the Peng Robinson equation of state for mixtures <a href="#appelo2014equations">[1]</a> <a href="#peng1976new">[2]</a>.</p>
+</div>
+
+<h2 id="input-file" class="anchor">Input file </h2>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">GEOCHEM
+Temp	350
+Pres	300e5
+
+SOLUTION
+pH	5 charge
+/end
+
+EQUILIBRIUM_PHASES
+dolomite 1 0
+quartz 1 0
+diopside 1 0
+/end
+
+GAS_PHASE
+volume_frac	1.33
+CO2,g	0
+H2O,g	0
+Ndg,g	10e5
+/end
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>
+<b>Explanation of input file:</b>
+</p>
+
+<dl>
+<dt><code>GEOCHEM .. /end</code>:<dd> 
+<p>  Defines a GEOCHEM calculation block.</p>
+<dt><code>Temp</code>:<dd> 
+<p>  temperature of solution, units: Celsius, default \( \text{350}^\circ\text{C} \)</p>
+<dt><code>Pres</code>:<dd> 
+<p>  pressure of solution, units: Pascal. NOTE: <code>Pres</code> only serves as an <em>initial guess</em> for the numerical solver. In a constant-volume gas phase, pressure is not fixed and is allowed to change during equilibration.</p>
+<dt><code>EQUILIBRIUM_PHASES .. /end</code>:<dd> 
+<p>  minerals present, here dolomite, quartz and diopside, see more description in the <a href="../../solution/html/solution-readable.html" target="_self">solution example</a>.  </p>
+<dt><code>GAS_PHASE ../end</code>:<dd> 
+<ul>
+  <li> <code>volume_frac</code>: ratio of gas volume to water volume</li>
+  <li> \( \co \) and \( \htg \) start at zero, any \( \co \) or \( \htg \) is generated by equilibration.</li>
+  <li> <code>Ndg,g</code> redox decoupled nitrogen gas (see below) at initial partial pressure of 10 bar.</li> 
+</ul>
+</dl>
+<div class="alert alert-block alert-success alert-text-normal"><b>Redox decoupled gas</b>
+<p>In this example, the gas phase includes an inert species (<code>Ndg</code>) that does not participate in aqueous speciation or redox reactions. Conceptually, <code>Ndg</code> represents a pressure-carrying gas such as \( \nig \), but without explicit redox coupling to the aqueous system. This is because the basis specie is \( \text{NO}_3^{-} \) and by default the equilibrium reaction for \( \nig \) is
+\( \nig\cheq 12\text{H}^+ -6 \text{H}_2\text{O} + 2 \text{NO}_3^- + 10 e^- \). This is not a reasonable modeling assumption as nitrogen is for all practical purposes an inert gas.   
+</p>
+</div>
+
+<h2 id="description-of-output" class="anchor">Description of output </h2>
+<p>The pH of the solution is close to 5, due to</p>
+<ul>
+<li> carbonate reactions associated with dolomite</li>
+<li> Dissolution&#8211;precipitation equilibria involving \( \COTW \) and bicarbonate</li>
+</ul>
+<p>Major aqueous species</p>
+<ul>
+<li> \( \Ca \) and \( \Mg \) Released from partial dolomite breakdown during equilibration.</li>
+<li> \( \HCOT \) The primary dissolved carbon species, reflecting equilibration between aqueous carbonate chemistry and the \( \COTW \)-rich gas phase.</li>
+<li> \( \text{SiO}_2 \) Controlled by equilibrium with quartz and diopside.</li>
+</ul>
+<p>The final pressure close to 240 bar, and the gas phase composition is in the file <code>&lt;root_name&gt;_gas_phase.out</code></p>
+
+<div class="row">
+  <div class="col-xs-6">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b>&#65279;gas</b></td> <td align="center"><b>Mol fraction</b></td> <td align="center"><b>Partial pressure [Pa]</b></td> <td align="center"><b>fugacity</b></td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   CO2,g          </td> <td align="center">   0.27            </td> <td align="center">   6.49E+01                 </td> <td align="center">   1.20        </td> </tr>
+<tr><td align="center">   H2O,g          </td> <td align="center">   0.71            </td> <td align="center">   1.72E+02                 </td> <td align="center">   0.61        </td> </tr>
+<tr><td align="center">   Ndg,g          </td> <td align="center">   0.02            </td> <td align="center">   5.59523                  </td> <td align="center">   1.62        </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-6 -->
+</div> <!-- cell row -->
+
+<p>
+<b>Key observations:</b>
+</p>
+<ol>
+<li> Water vapor dominates the gas phase. At \( \text{350}^\circ\text{C} \), water readily partitions into the gas phase. Because the gas volume is fixed, evaporation of water leads to a large contribution to total pressure. This behavior is expected and physically realistic for high-temperature fluid&#8211;gas systems.</li>
+<li> \( \COTW \) is produced by mineral equilibration. The presence of ~27 mol  \( \mathrm{CO_&#8322;} \) reflects production via the buffered reaction in the equation at the top. \( \COTW \) accumulates in the gas phase until its fugacity satisfies the mineral equilibrium, at which point further decarbonation is inhibited.</li>
+</ol>
+<div class="alert alert-block alert-success alert-text-normal"><b>Notice</b>
+<p>\( \COTW \)  pressure is an output, not an imposed condition. Its final value reflects coupling between mineral stability and gas volume</p>
+</div>
+
+<h1 id="appendix-gas-buffers-and-peng-robinson-parameters" class="anchor">Appendix: Gas buffers and Peng-Robinson parameters </h1>
+<p>For a (real) gas the thermodynamic activity is measured relative to an reference state of atmospheric pressure \( p_0=1 \) atm, e.g. for hydrogen gas</p>
+$$
+\begin{equation}
+a_\hy=\frac{f_\hy}{p_0},
+\tag{2}
+\end{equation}
+$$
+
+<p>where \( f \) is called the <em>fugacity</em>. For an ideal gas the fugacity is simply the partial pressure (i.e. the pressure the gas would exert if it was the only gas in a container), for real gasses at a (mechanical) pressure of \( p \), the fugacity is different \( f=\phi p \). \( \phi \) is called a <em>fugacity coefficient</em>. The fugacity coefficient are in many cases estimated from <a href="#appelo2014equations">[1]</a> (Note that in the paper the last term in the equation below has a <code>+</code> term, this is not correct)</p>
+$$
+\begin{equation}
+\ln \phi=\left(\frac{P V_m}{R T}-1\right)-\ln\left(\frac{P(V_m-b)}{RT}\right)
+-\frac{a\alpha(T)}{2.828 b R T}\ln\left(\frac{V_m+2.414 b}{V_m-0.414b}\right),
+\tag{3}
+\end{equation}
+$$
+
+<p>where the molar volume, \( V_m \), and pressure \( P \) is determined from the Peng-Robinson equation of state (EOS)</p>
+$$
+\begin{equation}
+P = \frac{RT}{V_m-b}-\frac{\alpha(T) a}{V_m^2+2bV_m-b^2}.
+\tag{4}
+\end{equation}
+$$
+
+<p>The parameters are</p>
+$$
+\begin{align}
+a&=0.457235 \frac{(RT_c)^2}{p_c}
+\tag{5}\\ 
+b&=0.077796\frac{RT_c}{p_c}
+\tag{6}\\ 
+\alpha(T)&=\left(1+(0.37464+1.54226\omega -0.26992\omega^2)\left(1-\sqrt{\frac{T}{T_c}}\right)\right)^2	
+\tag{7}
+\end{align}
+$$
+
+<p>\( p_c \) and \( T_c \) are the critical pressure and temperature respectively. Below are the values listed that are already included in <code>GeoChemX</code>. Note that the three last entries are <em>redox decoupled</em> versions of hydrogen, hydrogen sulfide and nitrogen gas. Wh </p>
+
+<div class="row">
+  <div class="col-xs-6">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b>&#65279;Name</b></td> <td align="center">\( T_ c \) [K]</td> <td align="center">\( P_c \) [Pa]</td> <td align="center">\( \omega \)</td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   CO2,g           </td> <td align="center">   304.2             </td> <td align="center">   7382539.5         </td> <td align="center">   0.225           </td> </tr>
+<tr><td align="center">   H2O,g           </td> <td align="center">   647.3             </td> <td align="center">   22048320          </td> <td align="center">   0.344           </td> </tr>
+<tr><td align="center">   O2,g            </td> <td align="center">   154.6             </td> <td align="center">   5045985           </td> <td align="center">   0.021           </td> </tr>
+<tr><td align="center">   H2,g            </td> <td align="center">   33.2              </td> <td align="center">   1296960           </td> <td align="center">   -0.225          </td> </tr>
+<tr><td align="center">   N2,g            </td> <td align="center">   126.2             </td> <td align="center">   3394387.5         </td> <td align="center">   0.039           </td> </tr>
+<tr><td align="center">   H2S,g           </td> <td align="center">   373.2             </td> <td align="center">   8936865           </td> <td align="center">   0.1             </td> </tr>
+<tr><td align="center">   CH4,g           </td> <td align="center">   190.6             </td> <td align="center">   4600155           </td> <td align="center">   0.008           </td> </tr>
+<tr><td align="center">   NH3,g           </td> <td align="center">   405.6             </td> <td align="center">   11277472.5        </td> <td align="center">   0.25            </td> </tr>
+<tr><td align="center">   Oxg,g           </td> <td align="center">   154.6             </td> <td align="center">   5045985           </td> <td align="center">   0.021           </td> </tr>
+<tr><td align="center">   Ntg,g           </td> <td align="center">   126.2             </td> <td align="center">   3394387.5         </td> <td align="center">   0.039           </td> </tr>
+<tr><td align="center">   Mtg,g           </td> <td align="center">   190.6             </td> <td align="center">   4600155           </td> <td align="center">   0.008           </td> </tr>
+<tr><td align="center">   Hdg,g           </td> <td align="center">   33.2              </td> <td align="center">   1296960           </td> <td align="center">   -0.225          </td> </tr>
+<tr><td align="center">   H2Sd,g          </td> <td align="center">   373.2             </td> <td align="center">   8936865           </td> <td align="center">   0.1             </td> </tr>
+<tr><td align="center">   Ndg,g           </td> <td align="center">   126.2             </td> <td align="center">   3394387.5         </td> <td align="center">   0.039           </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-6 -->
+</div> <!-- cell row -->
+<h1 id="bibliography" class="anchor">Bibliography </h1>
+
+<!-- begin bibliography -->
+<ol>
+ <li> <div id="appelo2014equations"></div> <b>C. Appelo, D. L. Parkhurst and V. Post</b>.  Equations for Calculating Hydrogeochemical Reactions of Minerals and Gases Such As CO2 at High Pressures and Temperatures, <em>Geochimica et Cosmochimica Acta</em>, 125, pp. 49-67, 2014.</li>
+ <li> <div id="peng1976new"></div> <b>D.-Y. Peng and D. B. Robinson</b>.  A New Two-Constant Equation of State, <em>Industrial &amp; Engineering Chemistry Fundamentals</em>, 15(1), pp. 59-64, 1976.</li>
+</ol>
+<!-- end bibliography -->
+<p>
+<!-- navigation buttons at the bottom of the page -->
+<ul class="pager">
+</ul>
+<!-- ------------------- end of main content --------------- -->
+</div>  <!-- end container -->
+<!-- include javascript, jQuery *first* -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+<!-- Bootstrap footer
+<footer>
+<a href="https://..."><img width="250" align=right src="https://..."></a>
+</footer>
+-->
+</body>
+</html>
+

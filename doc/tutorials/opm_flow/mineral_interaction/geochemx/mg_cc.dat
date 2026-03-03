@@ -1,0 +1,42 @@
+Tf  240
+Temp 130
+Pres 800000.0
+Imp 0
+VolRate 0.166666667
+Volume .08e3
+NoBlocks 40
+Flush 0.25
+debug 0
+WriteBlock 0
+WriteNetCDF 0
+Interpolate 0
+RateSurface 0
+porosity .1
+
+NumericalJacobian 0
+chemtol
+1e-7 1e-8
+/end
+
+geochem
+
+solution 0 
+--Initial solution
+pH 7 charge
+Ca 1e-7
+Cl 1e-8
+/end
+
+equilibrium_phases
+calcite 0.005
+magnesite 0
+/ end
+
+solution 1
+--Injected solution
+pH 7 charge
+Mg  0.2
+Cl  0.4
+/end
+
+/end

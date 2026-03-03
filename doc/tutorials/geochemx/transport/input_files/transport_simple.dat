@@ -1,0 +1,65 @@
+
+Temp 130
+Pres 800000.0
+Imp 0
+# ml
+Volume 40
+NoBlocks 20
+Flush .1
+debug 0
+
+#WriteNetCDF 2
+#Interpolate 0
+#punch 10
+porosity 0.5
+
+BASIS_SPECIES
+# Name a0 Mw analytical logK 
+#Tracer 5 5 /ANA 0 /
+/end
+
+
+
+NumericalJacobian 0
+chemtol
+1e-7 1e-8
+/end
+
+INJECT 1
+#solution name, time [hours], flow rate [ml/hour]
+1 8 0.2
+/end
+
+INJECT 0
+#solution name, time [hours], flow rate [ml/hour]
+3 8 0.4
+/end
+
+INJECT 3
+#solution name, time [hours], flow rate [ml/hour]
+2 16 0.1
+/end
+
+geochem
+
+solution 0 
+--Initial solution in column
+Tracer 0.05
+/end
+
+solution 1
+--Injected brine 1
+Tracer .1
+/end
+
+solution 2
+--Injected brine 2
+Tracer .3
+/end
+
+solution 3
+--Injected brine 2
+Tracer 0
+/end
+
+/end

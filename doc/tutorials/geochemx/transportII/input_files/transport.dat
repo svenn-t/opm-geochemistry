@@ -1,0 +1,70 @@
+Tf  24
+Temp 130
+Pres 800000.0
+Imp 0
+# ml/min
+VolRate 0.2
+# ml
+Volume 39.1
+NoBlocks 20
+Flush .7
+debug 0
+
+WriteNetCDF 1
+#Interpolate 0
+#punch 10
+porosity 0.5
+
+BASIS_SPECIES
+# Name a0 Mw
+SCN- 5 58.08 / HKF 909090 9 /
+Tracer 5 5 /ANA 0/
+/end
+
+
+chemtol
+1e-7 1e-8
+/end
+
+INJECT 0
+#solution name, time, flow rate
+1 24 
+/end
+
+geochem
+
+solution 0 
+--Initial solution in column
+pH 7 charge
+HCO3  1.0000E-08
+Ca  1.0000E-08
+/end
+
+complex
+method 1
+#specific surface area m^2/L pore volume, size of diffusion layer
+s_area 5000.0 10
+#donnan
+#Name sites/nm^2
+GCa 4.95
+GCO3 4.95
+/ end
+
+iexchange
+X 0.09
+/ end
+
+equilibrium_phases
+calcite 1 0
+/end
+
+solution 1
+--Injected brine
+pH 7 charge
+Na  4.8E-02
+K  2.4E-02
+SCN-  2.4E-02
+SO4  2.4E-02
+/end
+
+/end

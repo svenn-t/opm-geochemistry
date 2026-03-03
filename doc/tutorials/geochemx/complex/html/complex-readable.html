@@ -1,0 +1,542 @@
+<!--
+File automatically generated using DocOnce (https://github.com/doconce/doconce/):
+doconce format html main_complex.do.txt --html_style=bootswatch_readable --html_output=complex-readable --html_code_style=inherit --no_abort
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Surface complexation - the `COMPLEX` keyword">
+<title>Surface complexation - the `COMPLEX` keyword</title>
+<!-- Bootstrap style: bootswatch_readable -->
+<!-- doconce format html main_complex.do.txt --html_style=bootswatch_readable --html_output=complex-readable --html_code_style=inherit --no_abort -->
+<link href="https://netdna.bootstrapcdn.com/bootswatch/3.1.1/readable/bootstrap.min.css" rel="stylesheet">
+<!-- not necessary
+<link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+-->
+<style type="text/css">
+/* Let inline verbatim have the same color as the surroundings */
+code { color: inherit; background-color: transparent; }
+/* Add scrollbar to dropdown menus in bootstrap navigation bar */
+.dropdown-menu {
+   height: auto;
+   max-height: 400px;
+   overflow-x: hidden;
+}
+/* Adds an invisible element before each target to offset for the navigation
+   bar */
+.anchor::before {
+  content:"";
+  display:block;
+  height:64px;      /* fixed header height for style bootswatch_readable */
+  margin:-64px 0 0; /* negative fixed header height */
+}
+</style>
+</head>
+
+<!-- tocinfo
+{'highest level': 1,
+ 'sections': [('Table of contents',
+               1,
+               'table_of_contents',
+               'table_of_contents'),
+              ('Background', 1, None, 'background'),
+              ('Example: Equilibrium between a solution and carbonate surface '
+               'site',
+               1,
+               None,
+               'example-equilibrium-between-a-solution-and-carbonate-surface-site'),
+              ('Description of output', 2, None, 'description-of-output'),
+              ('Explicit diffusive layer calculations',
+               1,
+               None,
+               'explicit-diffusive-layer-calculations'),
+              ('Defining new surface species and reactions',
+               1,
+               None,
+               'defining-new-surface-species-and-reactions'),
+              ('Bibliography', 1, None, 'bibliography')]}
+end of tocinfo -->
+
+<body>
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+     equationNumbers: {  autoNumber: "none"  },
+     extensions: ["AMSmath.js", "AMSsymbols.js", "autobold.js", "color.js"]
+  }
+});
+</script>
+<script type="text/javascript" async
+ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+<!-- newcommands_keep.tex -->
+$$
+\newcommand{\logn}{\log_{10}}
+\newcommand{\HCOT}{\mathrm{HCO_3^-}}
+\newcommand{\Ca}{\mathrm{Ca^{2+}}}
+\newcommand{\HTO}{\mathrm{H_2O}}
+\newcommand{\Mg}{\mathrm{Mg^{2+}}}
+\newcommand{\SO}{\mathrm{SO_{4}^{2-}}}
+\newcommand{\HP}{\mathrm{H^{+}}}
+\newcommand{\Na}{\mathrm{Na^{+}}}
+\newcommand{\equilarrow}{\rightleftharpoons}
+\newcommand{\GCa}{\mathrm{>CaH_2O^{+}}}
+\newcommand{\GCO}{\mathrm{>CO_3^{-}}}
+\newcommand{\GCaCO}{\mathrm{>CaCO_{3}^{-}}}
+\newcommand{\GCaOH}{\mathrm{>CaOH^{0}}}
+\newcommand{\GCaHCO}{\mathrm{>CaHCO_3^{0}}}
+\newcommand{\GCOH}{\mathrm{>CO_{3}H^{0}}}
+\newcommand{\GCOCa}{\mathrm{>CO_3Ca^{+}}}
+\newcommand{\GCaSO}{\mathrm{>CaSO_4^{-}}}
+\newcommand{\GCOMg}{\mathrm{>CO_3Mg^{+}}}
+\newcommand{\Faraday}{F}
+$$
+
+
+
+<!-- Bootstrap navigation bar -->
+<div class="navbar navbar-default navbar-fixed-top">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="complex-readable.html">Surface complexation - the `COMPLEX` keyword</a>
+  </div>
+  <div class="navbar-collapse collapse navbar-responsive-collapse">
+    <ul class="nav navbar-nav navbar-right">
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+     <!-- navigation toc: --> <li><a href="#table_of_contents" style="font-size: 80%;"><b>Table of contents</b></a></li>
+     <!-- navigation toc: --> <li><a href="#background" style="font-size: 80%;"><b>Background</b></a></li>
+     <!-- navigation toc: --> <li><a href="#example-equilibrium-between-a-solution-and-carbonate-surface-site" style="font-size: 80%;"><b>Example: Equilibrium between a solution and carbonate surface site</b></a></li>
+     <!-- navigation toc: --> <li><a href="#description-of-output" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Description of output</a></li>
+     <!-- navigation toc: --> <li><a href="#explicit-diffusive-layer-calculations" style="font-size: 80%;"><b>Explicit diffusive layer calculations</b></a></li>
+     <!-- navigation toc: --> <li><a href="#defining-new-surface-species-and-reactions" style="font-size: 80%;"><b>Defining new surface species and reactions</b></a></li>
+     <!-- navigation toc: --> <li><a href="#bibliography" style="font-size: 80%;"><b>Bibliography</b></a></li>
+
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+</div> <!-- end of navigation bar -->
+<div class="container">
+<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p> <!-- add vertical space -->
+<a name="part0000"></a>
+<!-- ------------------- main content ---------------------- -->
+<div class="jumbotron">
+<center>
+<h1>Surface complexation - the <code>COMPLEX</code> keyword</h1>
+</center>  <!-- document title -->
+
+
+</div> <!-- end jumbotron -->
+<h1 id="table_of_contents">Table of contents</h1>
+
+<div class='toc'>
+<p><a href="#background"> Background  </a></p>
+<p><a href="#example-equilibrium-between-a-solution-and-carbonate-surface-site"> Example: Equilibrium between a solution and carbonate surface site </a></p>
+<p><span class="tab"> <a href="#description-of-output"> Description of output </a></p>
+<p><a href="#explicit-diffusive-layer-calculations"> Explicit diffusive layer calculations </a></p>
+<p><a href="#defining-new-surface-species-and-reactions"> Defining new surface species and reactions </a></p>
+<p><a href="#bibliography"> Bibliography </a></p>
+</div>
+<br>
+<h1 id="background" class="anchor">Background  </h1>
+<p>Surface reactions are implemented based on standard Poisson-Boltzmann / Gouy-Chapman
+theory; see <a href="#stumm:92">[1]</a>. The following surface complex reactions are included in the database
+<a href="#van1993surface">[2]</a> <a href="#Hiorth:10">[3]</a> for chalk  (see source file <code>ChemDatabaseHKF_surface.cpp</code>)
+</p>
+$$
+\begin{align}
+\GCaCO &\equilarrow \GCa + \HCOT - \HP - \HTO \,, 
+\tag{1}\\ 
+\GCaOH &\equilarrow \GCa - \HP \,, 
+\tag{2}\\ 
+\GCaHCO &\equilarrow \GCa + \HCOT - \HTO \,, 
+\tag{3}\\ 
+\GCaSO &\equilarrow \GCa + \SO \,, 
+\tag{4}\\ 
+\GCOH &\equilarrow  \GCO + \HP \,, 
+\tag{5}\\ 
+\GCOCa &\equilarrow \GCO+  \Ca \,, 
+\tag{6}\\ 
+\GCOMg &\equilarrow \GCO + \Mg \,.
+\tag{7}
+\end{align}
+$$
+
+<p>The ">"-symbol is used to distinguish surface complexes from aqueous complexes;
+note that \( \GCa \) and \( \GCO \) are treated as basis species, while the rest are
+secondary species. All of the surface complex reactions conserve charge.
+For each reaction there is a corresponding law of mass action expression.
+Mathematically, the only difference compared to the usual dissociation
+reactions is the inclusion of a new term that contains the surface potential,
+to correct activities at the surface for electrostatic effects <a href="#stumm:92">[1]</a>.
+As an example, applying the law of mass action to the equation involving \( \GCaCO \) above  yields:
+</p>
+$$
+\begin{align}
+\GCaCO&\equilarrow\,\GCa + \HCOT -\HP-\HTO,\nonumber\\ 
+K&=\frac{[\GCa]\,a_\HCOT\,
+\exp\{F\,\psi/(R\,T)\}}{[\GCaCO]\,a_\HP\,\exp\{-F\,\psi/(R\,T)\}}\,,\nonumber\\ 
+\logn K&=\,\logn [\GCa]\logn a_\HCOT-\logn a_\HP -\logn [\GCaCO]\nonumber\\ 
+&+\,2\underbrace{\frac{\Faraday\psi_0}{\ln10\,R\,T}}_{\logn E_0}\,.
+\tag{8}
+\end{align}
+$$
+
+<p>The activity of water has been assumed to be unity. To account for electrostatic
+effects, the activity of an aqueous species that reacts with a surface complex
+is influenced by the surface potential via the Boltzmann factor,
+</p>
+$$
+\exp\left(\frac{-Z_i \Faraday \psi_0}{RT}\right)\,,
+$$
+
+<p>where \( Z_i \) is the valence of the aqueous species, \( \Faraday \) = 9.648456 \( \cdot10^{4} \) C/mol is Faraday's
+constant, \( R \) = 8.314 J/(K mol) is the ideal gas constant, \( \psi_0 \) (V) is the
+surface potential, and T is the absolute temperature.
+Thus, when the surface potential has a negative sign, positively charged ions will
+have a high activity close to the surface, while negatively charged ions will
+have a high activity close to the surface if the surface potential is positive.
+</p>
+
+<p>To accommodate the electrostatic effect into the governing equations of the
+geochemical model, we have introduced \( E_0 \) as a shorthand for the Boltzmann
+correction. This is not merely a notational convenience: by adding \( E_0 \) as
+added as a fictive basis species, along with the two new surface basis
+species \( \GCa \)  and \( \GCO \), we can write the reaction in exactly the same
+mathematical form as chemical reactions in the aqueous phase <a href="#appelo2005geochemistry">[4]</a>.
+More generally, we let \( E=E(x) \) denote the Boltzmann factor
+</p>
+$$
+\exp\left(\frac{-Z_i \Faraday \psi(x)}{RT}\right)\,,
+$$
+
+<p>that is, \( E \) depends on the potential at distance \( x \) from the surface.</p>
+<h1 id="example-equilibrium-between-a-solution-and-carbonate-surface-site" class="anchor">Example: Equilibrium between a solution and carbonate surface site </h1>
+
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">geochem
+equilibrate 0
+solution 0
+--Solution to equilibrate
+pH 7 charge
+Na 0.48
+SO4 0.24
+/end
+
+complex
+method 1
+#specific surface area m^2/L pore volume
+s_area 1000.0 
+#Name sites/nm^2
+GCa 2
+GCO3 2
+/end
+
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>
+<b>Explanation of input file:</b>
+</p>
+
+<p>Note that the solution keyword is described in the <a href="../../solution/html/solution-readable.html" target="_self">solution example</a>. To model surface interactions with a charged surface of e.g. a carbonate, we need to invoke the <code>COMPLEX</code> keyword.</p>
+<dl>
+<dt><code>geochem .. /end</code>:<dd> 
+<p>  Defines the geochemical input block</p>
+<dt><code>equilibrate</code>:<dd> 
+<p>  equilibrate without changing the bulk solution (see also the <a href="../../iexchange/html/iexchange-readable.html" target="_self">ion exchange example</a>)</p>
+<dt><code>COMPLEX .. /end</code>:<dd> 
+<p>  Defines an ion exchange calculation block.</p>
+<dt><code>method</code>:<dd> 
+<p>  can take on three different values, described below</p>
+<ul>
+  <li> 0: puts surface potential to zero</li>
+  <li> 1: uses the trick described in <a href="#nodland2024new">[5]</a>, where one assumes that the solution does not contain ions with higher valence than 2. (Note that many other solvers assumes monovalent solutions)</li>
+  <li> 2: uses the general formulation of the Grahame equation (see e.g. <a href="#stumm:92">[1]</a>)</li>  
+</ul>
+<dt><code>GCa</code>:<dd> 
+<p>  name of the (positive) surface site</p>
+<dt><code>GCO3</code>:<dd> 
+<p>  name of the (negative) surface site</p>
+<dt><code>2</code>:<dd> 
+<p>  is the number of surface sites, for carbonate typical value is 2-5.</p>
+</dl>
+<p>When run, <code>GeoChemX</code> will:</p>
+
+<ol>
+<li> Create a solution at pH 7.</li>
+<li> Add the dissolved ions \( \Na \), \( \SO \).</li>
+<li> Perform a charge-balance adjustment using \( \HP \).</li>
+<li> Add surface complexes 2 sites/nm.</li>
+<li> Compute how positive and negative ions, partition between:</li>
+<ul>
+  <li> aqueous phase</li>
+  <li> surface complex sites</li>
+</ul>
+</ol>
+<h2 id="description-of-output" class="anchor">Description of output </h2>
+<p>In the file <code>&lt;root_name&gt;_solution.out</code> there are now the following output</p>
+
+<dl>
+<dt><code>pH = 10.6517</code>:<dd> 
+<p>  Final equilibrium pH, the solution becomes alkaline due to surface reactions and sulfate interactions.</p>
+<dt><code>Sch [C/m2] = &#8211;0.0747877</code>:<dd> 
+<p>  Total surface charge density. The surface is negatively charged, dominated by deprotonated surface carbonate groups.</p>
+<dt><code>Sch DL= 0</code>:<dd> 
+<p>  Charge in the diffuse layer, zero here because it is not calculated (see next section).</p>
+<dt><code>psi [mV] = &#8211;43.5162</code>:<dd> 
+<p>  Electrostatic potential. The surface develops a negative electric potential consistent with negative charge.</p>
+<dt><code>F = 96484.6 C/mol</code>:<dd> 
+<p>  Faraday constant. Provided for completeness.</p>
+<dt><code>S = 1000 m2/L</code>:<dd> 
+<p>  Surface area per liter</p>
+<dt><code>cbal = &#8211;1.01E-7 eq/L</code>:<dd> 
+<p>  Charge balance error. Very small, i.e. good numerical charge balance.</p>
+<dt><code>n(1), n(-1), n(2), n(-2)</code>:<dd> 
+<p>  Concentration of charge of ions with valence 1, -1, <em>larger than</em> 1, and <em>less than -1</em>, respectively. These are only calculated when surface model is used.</p>
+<dt><code>g(1), g(-1), g(2), g(-2)</code>:<dd> 
+<p>  Ratio of surface excess to bulk concentration for valence 1, -1, <em>larger than</em> 1, and <em>less than -1</em> species, respectively. All zero as the diffusive layer is not calculated (see next section).</p>
+</dl>
+<p>At the end of the file one can see the equivalent fractions</p>
+
+<div class="row">
+  <div class="col-xs-5">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b>&#65279;species</b></td> <td align="center"><b>concentration</b></td> <td align="center"><b>fractions</b></td> <td align="center"><b>   logK  </b></td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   GCO3-              </td> <td align="center">   3.32E-03         </td> <td align="center">   1.00E+00     </td> <td align="center">   0.00E+00     </td> </tr>
+<tr><td align="center">   GCa+               </td> <td align="center">   2.93E-03         </td> <td align="center">   8.83E-01     </td> <td align="center">   0.00E+00     </td> </tr>
+<tr><td align="center">   GCaSO4-            </td> <td align="center">   3.86E-04         </td> <td align="center">   1.16E-01     </td> <td align="center">   -2.11E+00    </td> </tr>
+<tr><td align="center">   GCaOH              </td> <td align="center">   3.55E-06         </td> <td align="center">   1.07E-03     </td> <td align="center">   1.28E+01     </td> </tr>
+<tr><td align="center">   GCO3H              </td> <td align="center">   3.06E-08         </td> <td align="center">   9.21E-06     </td> <td align="center">   -4.88E+00    </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-5 -->
+</div> <!-- cell row -->
+<h1 id="explicit-diffusive-layer-calculations" class="anchor">Explicit diffusive layer calculations </h1>
+<p>The theory behind the diffusive layer calculations are described in great detail in <a href="#nodland2024new">[5]</a>. Explicit diffusive layer calculations might be important when flow is present. Contrary to ion exchange, the surface complexation reactions changes charge on the surface, therefore the solution can loose e.g. negative ions due surface complexation reactions. To conserve charge balance there must be an equal but opposite charge in the diffusive layers. The diffusive layer should not be transported along with the bulk solution, otherwise the solution will loose charge due to convection which is not physical. In <code>GeoChemX</code> the diffusive layer calculations are triggered by setting a size of the diffusive layer in nm</p>
+
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">geochem
+debug 1
+equilibrate 0 
+solution 0
+--Solution to equilibrate
+pH 7 charge
+Na 0.48
+SO4 0.24
+/end
+
+complex
+method 1
+#specific surface area m^2/L pore volume, size of diffusion layer
+s_area 1000.0 10
+#Name sites/nm^2
+GCa 2
+GCO3 2
+/end
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Here we have set 10 nm as the diffusive layer size, running <code>GeoChemX</code> the following table can be found in <code>&lt;root_name&gt;_solution.out</code></p>
+
+<div class="row">
+  <div class="col-xs-7">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b>&#65279;Species</b></td> <td align="center"><b>ch</b></td> <td align="center"><b> c_tot  </b></td> <td align="center"><b> c_tot_aq</b></td> <td align="center"><b>c_tot_SC</b></td> <td align="center"><b>c_tot_IO</b></td> <td align="center"><b>   c_dl  </b></td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   H+                 </td> <td align="center">   1     </td> <td align="center">   1.00E+00    </td> <td align="center">   -4.85E-06    </td> <td align="center">   4.80E-06    </td> <td align="center">   0.00E+00    </td> <td align="center">   2.16E-09     </td> </tr>
+<tr><td align="center">   H2O                </td> <td align="center">   0     </td> <td align="center">   0.00E+00    </td> <td align="center">   1.00E+00     </td> <td align="center">   2.25E-08    </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00     </td> </tr>
+<tr><td align="center">   Na+                </td> <td align="center">   1     </td> <td align="center">   4.80E-01    </td> <td align="center">   4.80E-01     </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00    </td> <td align="center">   4.49E-04     </td> </tr>
+<tr><td align="center">   SO4-2              </td> <td align="center">   -2    </td> <td align="center">   2.40E-01    </td> <td align="center">   2.40E-01     </td> <td align="center">   3.89E-04    </td> <td align="center">   0.00E+00    </td> <td align="center">   -1.62E-04    </td> </tr>
+<tr><td align="center">   GCO3-              </td> <td align="center">   0     </td> <td align="center">   3.32E-03    </td> <td align="center">   0.00E+00     </td> <td align="center">   3.32E-03    </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00     </td> </tr>
+<tr><td align="center">   GCa+               </td> <td align="center">   0     </td> <td align="center">   3.32E-03    </td> <td align="center">   0.00E+00     </td> <td align="center">   3.32E-03    </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00     </td> </tr>
+<tr><td align="center">   E                  </td> <td align="center">   0     </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00     </td> <td align="center">   1.85E-01    </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00     </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-7 -->
+</div> <!-- cell row -->
+
+<p>At the top of the file one can also find the charge on the surface -0.0745805 \( C/m^2 \) and in the diffusive layer as 0.0745805 \( C/m^2 \). As an extra check: By multiplying the concentrations in <code>c_tot_SC</code> with the corresponding charge, sum and multiply with Faradays constant divided by the surface area will give the surface charge (-0.0745805 C/m$^2$). Doing the same for the column in <code>c_tot_dl</code> will give the same charge, but with opposite sign.</p>
+<h1 id="defining-new-surface-species-and-reactions" class="anchor">Defining new surface species and reactions </h1>
+<p>If the user wants to use different \( \log \) K values, define new reactions or surface species, that can be done through the <code>include</code> keyword. Consider the same input file as before, but now we add <code>include &quot;ions.txt&quot;</code></p>
+
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">geochem
+include &quot;ions.txt&quot;
+equilibrate 0
+solution 0
+--Solution to equilibrate
+pH 7 charge
+Na 0.48
+SO4 0.24
+/end
+
+complex
+method 1
+#specific surface area m^2/L pore volume
+s_area 1000.0 
+#Name sites/nm^2
+GCa 2
+GCO3_new- 2
+/end
+
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>
+<b>Input file <code>ions.txt</code>:</b>
+</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">SURFACE_SPECIES
+#name 
+GCO3_new-  
+/end
+
+SECONDARY_SPECIES
+GCO3_newNa  = GCO3_new- + Na+ / ANA  -0.8 /
+GCaSO4- = GCa+ + SO4-2 /ANA -1.5/
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>This will change the <code>logK</code> of the sulfate complexation reaction and add a new surface specie <code>GCO3_new-</code>. NB: it is important to include the charge of <code>GCO3_new</code> in the input file. After running <code>GeoChemX</code> the surface fractions are as follows</p>
+
+<div class="row">
+  <div class="col-xs-5">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b>&#65279;species</b></td> <td align="center"><b>concentration</b></td> <td align="center"><b> fractions </b></td> <td align="center"><b>  logK </b></td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   GCa+               </td> <td align="center">   2.12E-03         </td> <td align="center">   0.638817       </td> <td align="center">   0          </td> </tr>
+<tr><td align="center">   GCO3_new-          </td> <td align="center">   1.04E-03         </td> <td align="center">   0.0010419      </td> <td align="center">   0          </td> </tr>
+<tr><td align="center">   GCaOH              </td> <td align="center">   1.63E-06         </td> <td align="center">   0.000489977    </td> <td align="center">   12.8334    </td> </tr>
+<tr><td align="center">   GCO3_newNa         </td> <td align="center">   2.28E-03         </td> <td align="center">   0.686277       </td> <td align="center">   -0.8       </td> </tr>
+<tr><td align="center">   GCaSO4-            </td> <td align="center">   1.20E-03         </td> <td align="center">   0.360693       </td> <td align="center">   -1.5       </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-5 -->
+</div> <!-- cell row -->
+
+<br />
+<h1 id="bibliography" class="anchor">Bibliography </h1>
+
+<!-- begin bibliography -->
+<ol>
+ <li> <div id="stumm:92"></div> <b>W. Stumm, L. Sigg and B. Sulzberger</b>.  <em>Chemistry of the Solid-Water Interface: Processes at the Mineral-Water and Particle-Water Interface in Natural Systems</em>, <em>A Wiley-interscience publication</em>, Wiley, 1992, <a href="http://books.google.no/books?id=0Sj-cJ0Nx0YC" target="_self"><tt>http://books.google.no/books?id=0Sj-cJ0Nx0YC</tt></a>, <a href="http://books.google.no/books?id=0Sj-cJ0Nx0YC" target="_self"><tt>http://books.google.no/books?id=0Sj-cJ0Nx0YC</tt></a>.</li>
+ <li> <div id="van1993surface"></div> <b>P. V. Cappellen, L. Charlet, W. Stumm and P. Wersin</b>.  A Surface Complexation Model of the Carbonate Mineral-Aqueous Solution Interface, <em>Geochimica et Cosmochimica Acta</em>, 57(15), pp. 3505-3518, 1993.</li>
+ <li> <div id="Hiorth:10"></div> <b>A. Hiorth, L. Cathles and M. Madland</b>.  The Impact of Pore Water Chemistry on Carbonate Surface Charge and Oil Wettability, <em>Transport in Porous Media</em>, 85, pp. 1-21, 2010, \url 10.1007/s11242-010-9543-6, 10.1007/s11242-010-9543-6.</li>
+ <li> <div id="appelo2005geochemistry"></div> <b>C. A. J. Appelo and D. Postma</b>.  <em>Geochemistry, Groundwater and Pollution</em>, 2nd edition edition, CRC Press, 2005.</li>
+ <li> <div id="nodland2024new"></div> <b>O. Nodland and A. Hiorth</b>.  A New Formulation of the Surface Charge/surface Potential Relationship in Electrolytes With Valence Less Than Three, <em>Computational Geosciences</em>, 28(2), pp. 289-304, 2024.</li>
+</ol>
+<!-- end bibliography -->
+<p>
+<!-- navigation buttons at the bottom of the page -->
+<ul class="pager">
+</ul>
+<!-- ------------------- end of main content --------------- -->
+</div>  <!-- end container -->
+<!-- include javascript, jQuery *first* -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+<!-- Bootstrap footer
+<footer>
+<a href="https://..."><img width="250" align=right src="https://..."></a>
+</footer>
+-->
+</body>
+</html>
+

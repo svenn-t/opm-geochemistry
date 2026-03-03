@@ -1,0 +1,664 @@
+<!--
+File automatically generated using DocOnce (https://github.com/doconce/doconce/):
+doconce format html main_transport.do.txt --html_style=bootswatch_readable --html_output=transport-readable --html_code_style=inherit
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="1 Dimensional tracer modeling">
+<title>1 Dimensional tracer modeling</title>
+<!-- Bootstrap style: bootswatch_readable -->
+<!-- doconce format html main_transport.do.txt --html_style=bootswatch_readable --html_output=transport-readable --html_code_style=inherit -->
+<link href="https://netdna.bootstrapcdn.com/bootswatch/3.1.1/readable/bootstrap.min.css" rel="stylesheet">
+<!-- not necessary
+<link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+-->
+<style type="text/css">
+/* Let inline verbatim have the same color as the surroundings */
+code { color: inherit; background-color: transparent; }
+/* Add scrollbar to dropdown menus in bootstrap navigation bar */
+.dropdown-menu {
+   height: auto;
+   max-height: 400px;
+   overflow-x: hidden;
+}
+/* Adds an invisible element before each target to offset for the navigation
+   bar */
+.anchor::before {
+  content:"";
+  display:block;
+  height:64px;      /* fixed header height for style bootswatch_readable */
+  margin:-64px 0 0; /* negative fixed header height */
+}
+</style>
+</head>
+
+<!-- tocinfo
+{'highest level': 1,
+ 'sections': [('Table of contents',
+               1,
+               'table_of_contents',
+               'table_of_contents'),
+              ('Input file', 2, None, 'input-file'),
+              ('Running code', 2, None, 'running-code'),
+              ('Description of output', 2, None, 'description-of-output'),
+              ('Appendix: Numerical transport algorithm',
+               1,
+               None,
+               'appendix-numerical-transport-algorithm'),
+              ('Finite Volume (FV) discretization',
+               2,
+               None,
+               'finite-volume-fv-discretization'),
+              ('Bibliography', 1, None, 'bibliography')]}
+end of tocinfo -->
+
+<body>
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+     equationNumbers: {  autoNumber: "none"  },
+     extensions: ["AMSmath.js", "AMSsymbols.js", "autobold.js", "color.js"]
+  }
+});
+</script>
+<script type="text/javascript" async
+ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+<!-- newcommands_keep.tex -->
+$$
+\newcommand{\logn}{\log_{10}}
+\renewcommand{\vec}[1]{\overrightarrow{#1}}
+\newcommand{\totalconc}[1]{c_{#1}}
+\newcommand{\cellavg}[1]{\langle{#1}\rangle}
+$$
+
+
+
+<!-- Bootstrap navigation bar -->
+<div class="navbar navbar-default navbar-fixed-top">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="ransport-readable.html">1 Dimensional tracer modeling</a>
+  </div>
+  <div class="navbar-collapse collapse navbar-responsive-collapse">
+    <ul class="nav navbar-nav navbar-right">
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+     <!-- navigation toc: --> <li><a href="#table_of_contents" style="font-size: 80%;"><b>Table of contents</b></a></li>
+     <!-- navigation toc: --> <li><a href="#input-file" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Input file</a></li>
+     <!-- navigation toc: --> <li><a href="#running-code" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Running code</a></li>
+     <!-- navigation toc: --> <li><a href="#description-of-output" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Description of output</a></li>
+     <!-- navigation toc: --> <li><a href="#appendix-numerical-transport-algorithm" style="font-size: 80%;"><b>Appendix: Numerical transport algorithm</b></a></li>
+     <!-- navigation toc: --> <li><a href="#finite-volume-fv-discretization" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Finite Volume (FV) discretization</a></li>
+     <!-- navigation toc: --> <li><a href="#bibliography" style="font-size: 80%;"><b>Bibliography</b></a></li>
+
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+</div> <!-- end of navigation bar -->
+<div class="container">
+<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p> <!-- add vertical space -->
+<a name="part0000"></a>
+<!-- ------------------- main content ---------------------- -->
+<div class="jumbotron">
+<center>
+<h1>1 Dimensional tracer modeling</h1>
+</center>  <!-- document title -->
+
+
+</div> <!-- end jumbotron -->
+<h1 id="table_of_contents">Table of contents</h1>
+
+<div class='toc'>
+<p><span class="tab"> <a href="#input-file"> Input file </a></p>
+<p><span class="tab"> <a href="#running-code"> Running code </a></p>
+<p><span class="tab"> <a href="#description-of-output"> Description of output </a></p>
+<p><a href="#appendix-numerical-transport-algorithm"> Appendix: Numerical transport algorithm </a></p>
+<p><span class="tab"> <a href="#finite-volume-fv-discretization"> Finite Volume (FV) discretization  </a></p>
+<p><a href="#bibliography"> Bibliography </a></p>
+</div>
+<br>
+
+<p>This input file defines a one-dimensional reactive transport simulation in which multiple injected fluids are flushed through a porous column. The example demonstrates coupling between advection, aqueous geochemistry, and time-dependent injection schedules.</p>
+
+<p>The goal of this simulation is to illustrate:</p>
+<ul>
+<li> One-dimensional advective transport through a porous medium</li>
+<li> Sequential injection of different solutions with different tracer concentrations</li>
+<li> Time-dependent flow rates</li>
+<li> Coupling of transport with geochemical equilibration</li>
+</ul>
+<div class="alert alert-block alert-success alert-text-normal"><b>Notice</b>
+<p>The example is intentionally simple and focuses on transport behavior, not mineral reactions, ion exchange or surface complexation. There is only a pH calculation done for each step.</p>
+</div>
+
+<h2 id="input-file" class="anchor">Input file </h2>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">Temp 130
+Pres 800000.0
+Imp 0
+#VolRate 0.2
+# ml
+Volume 40
+NoBlocks 20
+Flush 1
+debug 0
+
+porosity 0.5
+
+#add_species &quot;ions.txt&quot;
+BASIS_SPECIES
+# Name a0 Mw analytical logK 
+Tracer 5 5 /ANA 0 /
+/end
+
+
+NumericalJacobian 0
+chemtol
+1e-7 1e-8
+/end
+
+INJECT 1
+#solution name, time [hours], flow rate [ml/hour]
+1 8 0.2
+/end
+
+INJECT 0
+#solution name, time [hours], flow rate [ml/hour]
+0 8 0.4
+/end
+
+INJECT 3
+#solution name, time [hours], flow rate [ml/hour]
+2 16 0.1
+/end
+
+geochem
+
+solution 0 
+--Initial solution in column
+Tracer 0.05
+/end
+
+solution 1
+--Injected brine 1
+Tracer .1
+/end
+
+solution 2
+--Injected brine 2
+Tracer .3
+/end
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>
+<b>Explanation of input file:</b>
+</p>
+
+<p>
+<b>Global model settings:</b>
+</p>
+<dl>
+<dt><code>Temp</code>:<dd> 
+<p>  Temperature inside column of 130 \( ^\circ\text{C} \)</p>
+<dt><code>Pres</code>:<dd> 
+<p>  pressure of solution, units: Pascal, default \( 8\cdot 10^5 \) Pa</p>
+<dt><code>Imp</code>:<dd> 
+<p>  Implicit (<code>Imp</code> = 1) or explicit (<code>Imp</code> = 0) integration.</p>
+</dl>
+<p>
+<b>Column geometry and discretization:</b>
+</p>
+<dl>
+<dt><code>Volume</code>:<dd> 
+<p>  Total column volume, 40 mL</p>
+<dt><code>NoBlocks</code>:<dd> 
+<p>  Number of grid blocks, 20</p>
+<dt><code>Porosity</code>:<dd> 
+<p>  porosity 0.5</p>
+</dl>
+<p>
+<b>Transport control flags:</b>
+</p>
+<dl>
+<dt><code>Flush</code>:<dd> 
+<p>  Controls how much of the pore volume of each block is flooded during a time step. If <code>Flush=1</code>, exactly the time step is chosen such that 1 block pore volume is flushed during each simulation time step.</p>
+<dt><code>debug</code>:<dd> 
+<p>  writes extra information to screen, if set to zero output is disabled.</p>
+</dl>
+<p>
+<b>Chemical system information:</b>
+</p>
+<dl>
+<dt><code>BASIS_SPECIES</code>:<dd> 
+<p>  user defined specie, the user has to give in the molecular weight, the Bohr radius and a model for the logK. If <code>ANA</code> is used the numbers \( a_1\ldots a_6 \) has to be entered and the following formula is used</p>
+</dl>
+$$
+\begin{equation}
+\logn K = a_1 + a_2 T + \frac{a_3}{T} + a_4\logn{T} + \frac{a_5}{T^2} + a_6 T^2.
+\tag{1}
+\end{equation}
+$$
+
+<p>Here \( \log K = 0 \). Optionally <code>HKF</code> may be used, then we use the HKF equation of state <a href="#helgeson1974theoretical">[1]</a> <a href="#helgeson1981theoretical">[2]</a>, the default values already implemented are those defined in the SUPCRT thermodynamic database <a href="#johnson1992supcrt92">[3]</a>.</p>
+
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">BASIS_SPECIES
+# name a0 mol_weight
+# HKF parameters: DeltaG DeltaH S a1 a2 a3 a4 c1 c2 omega
+ACE- 5 59.04 / HKF -88270 -116160 20.6 7.7525 8.6996 7.5825 -3.1385 26.3 -3.86 1.3182 /
+/end
+
+SECONDARY_SPECIES
+# DeltaG DeltaH S a1 a2 a3 a4 c1 c2 omega
+ACEH = ACE- + H+ /HKF -94760 -116100 42.7 11.6198 5.218 2.5088 -2.9946 42.076 -1.5417 -0.15 /
+/end
+
+MINERAL_PHASES
+# HKF parameters: mol_volume DeltaG DeltaH S a1 a2 a3 a7
+WITHERITE = Ba+2 + HCO3- - H+ / HKF 45.81 -278400 -297500 26.8 21.5 11.06 -3.91 /
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="alert alert-block alert-success alert-text-normal"><b>Units for HKF</b>
+<p>The input values must use the same units  as in the paper by <a href="#johnson1992supcrt92">[3]</a></p>
+</div>
+
+
+<p>
+<b>Optional numerical constraints:</b>
+</p>
+<dl>
+<dt><code>Numericalacobian</code>:<dd> 
+<p>  if zero, analytical Jacobian is used. Should always be zero, but in case the solver does not converge one can try to put it to 1, which would indicate a bug in the analytical implementation.</p>
+<dt><code>chemtol</code>:<dd> 
+<p>  Sets numerical convergence criteria, default is <code>1e-7 1e-8</code>.</p>
+<ul>
+  <li> Solver uses one loop for mass balance, and a second outer loop for pH or charge balance. The first number controls the convergence of mass balance and the second, charge balance.</li>
+</ul>
+</dl>
+<p>
+<b>Injection schedule:</b>
+The simulation uses three injection stages, each defined by an <code>INJECT</code> block.
+</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">INJECT 1
+#solution name, time [hours], flow rate [ml/hour]
+1 8 0.2
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ul>
+<li> Injected solution: solution 1</li>
+<li> Duration: 8 hours</li>
+<li> Flow rate: 0.2 mL/hour</li>
+</ul>
+<div class="alert alert-block alert-success alert-text-normal"><b>Flow rate</b>
+<p>It is possible to use the global keyword <code>VolRate</code> if the flow rate is kept constant during simulation. </p>
+</div>
+
+
+<p>
+<b>Geochemical definitions:</b>
+<code>geochem .. /end</code>: defines the geochemical block
+</p>
+
+<div class="alert alert-block alert-success alert-text-normal"><b>Initial column solution</b>
+<p>The initial column solution is <em>always the first one</em>, and in this case <code>solution 0</code>. Ion exchange, mineral reactions has to come right after this solution. </p>
+</div>
+
+
+<p>The simulation set up:</p>
+<ul>
+<li> The column is initialized with solution 0</li>
+<li> Solution 1 is injected for 8 hours at low flow</li>
+<li> The tracer is removed by flushing with solution 3 at higher flow</li>
+<li> Solution 2 is injected for 16 hours at low flow</li>
+</ul>
+<h2 id="running-code" class="anchor">Running code </h2>
+<p>The file is run by using <code>TRANSPORT</code> keyword on the command line</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">Terminal&gt;GeoChemX TRANSPORT &lt;input_file&gt;
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h2 id="description-of-output" class="anchor">Description of output </h2>
+<p>Transport and aqueous chemistry are solved sequentially in each grid block. In the file <code>&lt;root_name&gt;OneDEff.out</code> the time steps, pore volumes and concentrations are tabulated, and can easily be imported in to python using Pandas <code>pandas.read_csv(&quot;&lt;root_name&gt;OneDEff.out&quot;, sep =&quot;\t&quot;)</code>.</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">#&lt;root_name&gt;OneDEff.out
+Time	PVinj	Tracer	pH
+0.0166667	0.005	0.05	5.92069
+0.0333333	0.01	0.05	5.92069
+0.05		0.015	0.05	5.92069
+0.0666667	0.02	0.05	5.92069
+....
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>In figure <a href="#fig:trans">1</a> we show the effluent concentration for different values of the <code>Flush</code> keyword. Note that there is no numerical dispersion for <code>Flush=1</code>, by adjusting this value one can also model diffusion and dispersion.</p>
+
+<center> <!-- figure label: --> <div id="fig:trans"></div> <!-- FIGURE -->
+<hr class="figure">
+<center>
+<p class="caption">Figure 1: Tracer concentrations out of the core, <code>Flush=1</code> and <code>Flush=0.1</code>.  <!-- caption label: fig:trans --></p>
+</center>
+<p><img src="fig-transport/transport_simple.png" width="800" align="bottom"></p>
+</center>
+
+<div class="alert alert-block alert-success alert-text-normal"><b>Equilibration of injected solutions</b>
+<p>Before solutions are injected into the column <em>they are equilibrated</em>, this is a necessary step to estimate a pH for the solution. Therefore the solver equilibrates the solution before injecting, the results of those calculations are stored in the files <code>&lt;root_name&gt;_init_&lt;solution_name&gt;_aq.out</code>, <code>&lt;root_name&gt;_init_&lt;solution_name&gt;_buffer.out</code>, <code>&lt;root_name&gt;_init_&lt;solution_name&gt;_species.out</code> and <code>&lt;root_name&gt;_init_&lt;solution_name&gt;_solution.out</code>.    </p>
+</div>
+
+<h1 id="appendix-numerical-transport-algorithm" class="anchor">Appendix: Numerical transport algorithm </h1>
+<h2 id="finite-volume-fv-discretization" class="anchor">Finite Volume (FV) discretization  </h2>
+
+<p>The Finite Volume (FV) method is based on the integral form of the mass
+balance equations <a href="#hirsch2007numerical">[4]</a>,
+</p>
+$$
+\begin{align}
+\frac{1}{\partial t}\left(\int_{V} \phi \totalconc{i}\,dV\right)
++ \int_{A=\partial V} \vec{J_{i}}^t \cdot \hat{\vec{n}}\,dA
+= \int_{V} \phi r_i\,dV\,,
+\tag{2}
+\end{align}
+$$
+
+<p>where \( \hat{\vec{n}} \) is the outward-pointing normal vector to the
+boundary \( A \) of the volume \( V \). This equation can be rewritten in terms
+of <em>volume-averaged</em> variables as follows:
+</p>
+$$
+\begin{align}
+V\cdot\partial_t\cellavg{\phi c_i}
++ \int_{A=\partial V} \vec{J_{i}}^t \cdot \hat{\vec{n}}\,dA
+= V\cdot\cellavg{\phi r_i}\,.
+\tag{3}
+\end{align}
+$$
+
+<p>By integrating this equation from \( t=t_i \) to \( t_f=t_i+\Delta t \), we find:</p>
+$$
+\begin{align}
+V\cdot\left[\cellavg{\phi c_i}^{n+1}-\cellavg{\phi c_i}^{n}\right]
++ \int_{t_i}^{t_f}\int_{A=\partial V} \vec{J_{i}}^t \cdot \hat{\vec{n}}\,dA\,dt
+= V\cdot\Delta t\cdot\cellavg{\phi r_i}^{\star}\,,
+\tag{4}
+\end{align}
+$$
+
+<p>where the \( \star \)-superscript denotes the <em>time-average</em>. The flux term can
+be written as
+</p>
+$$
+\begin{align}
+\int_{t_i}^{t_f}\int_{A=\partial V} \vec{J_{i}}^t \cdot \hat{\vec{n}}\,dA\,dt
+&= \int_{t_i}^{t_f}\displaystyle\sum_{A_f\in{A}} \int_{A_f} \vec{J_{i}}^t \cdot \hat{\vec{n}}\,dA\,dt \nonumber \\
+&= \displaystyle\sum_{A_f\in{A}} \int_{A_f} \int_{t_i}^{t_f}\vec{J_{i}}^t \cdot \hat{\vec{n}}\,dt\,dA\nonumber \\
+&= \Delta t\displaystyle\sum_{A_f\in{A}} \int_{A_f}
+\left(\vec{J_{i}}^t \cdot \hat{\vec{n}}\right)^{\star}\,dA 
+\tag{5}\\
+&\approx
+\Delta t\displaystyle\sum_{A_f\in{A}}
+\left\{
+\theta \left(\vec{J_{i}}^t \cdot \hat{\vec{n}}\right)_f^{n+1}
++  (1-\theta) \left(\vec{J_{i}}^t \cdot \hat{\vec{n}}\right)_f^{n}
+\right\}\cdot |A_f| \,.
+\tag{6}
+\end{align}
+$$
+
+<p>In the last line, we have approximated the time-averaged flux term as a
+weighted arithmetic average of the flux terms at times \( t_i \) and \( t_f \)
+(i.e., a Crank-Nicolson method).
+For purely advective flow, \( \vec{J_{i}}^t=\vec{u}\totalconc{i} \), thus
+</p>
+$$
+\begin{align}
+-\int_{t_i}^{t_f}\int_{A=\partial V} \vec{J_{i}}^t \cdot \hat{\vec{n}}\,dA\,dt
+&\approx \Delta t \cdot\theta\displaystyle\sum_{A_f\in{A}}(Q\totalconc{i})_f^{n+1}
++ \Delta t \cdot(1-\theta)\displaystyle\sum_{A_f\in{A}}(Q\totalconc{i})_f^{n}
+\nonumber \\
+&=
+\Delta t \cdot\theta\left(
+\displaystyle\sum_{A_f\in{A}}(Q_{in}\totalconc{i})_f^{n+1}
+-\displaystyle\sum_{A_f\in{A}}(Q_{out}\totalconc{i})_f^{n+1}
+\right)\nonumber \\
+&+\Delta t \cdot(1-\theta)\left(
+\displaystyle\sum_{A_f\in{A}}(Q_{in}\totalconc{i})_f^{n}
+-\displaystyle\sum_{A_f\in{A}}(Q_{out}\totalconc{i})_f^{n}
+\right)
+\,,
+\tag{7}
+\end{align}
+$$
+
+<p>where \( Q_f \) is the volumetric flow rate across the face \( A_f \), with \( Q_f>0 \)
+for flow <em>into</em> the volume (notice the minus sign on the left-hand side).
+In turn, we have \( Q_f=Q_{in, f}-Q_{out, f} \)
+for \( Q_{in, f}=\text{max}(Q_f, 0) \) and \( Q_{out, f}=\text{max}(-Q_f, 0) \).
+The same approximation of the time-average is applied to the
+reaction term, yielding
+</p>
+$$
+\begin{align}
+\cellavg{V_p\totalconc{i}}^{n+1}-\cellavg{V_p\totalconc{i}}^{n}
+&=
+\Delta t \cdot\theta\left(
+\displaystyle\sum_{A_f\in{A}}(Q_{in}\totalconc{i})_f^{n+1}
+-\displaystyle\sum_{A_f\in{A}}(Q_{out}\totalconc{i})_f^{n+1}
+\right) \nonumber \\
+&+ \Delta t \cdot\theta\cellavg{V_p r_i}^{n+1}\nonumber \\
+&+\Delta t \cdot(1-\theta)\left(
+\displaystyle\sum_{A_f\in{A}}(Q_{in}\totalconc{i})_f^{n}
+-\displaystyle\sum_{A_f\in{A}}(Q_{out}\totalconc{i})_f^{n}
+\right) \nonumber \\
+&+ \Delta t \cdot(1-\theta)\cellavg{V_p r_i}^{n}
+\,.
+\tag{8}
+\end{align}
+$$
+
+<p>We assume that porosity is constant inside the volume and, by abuse of
+notation, we replace the time-averaged concentration and reaction term
+with the original variables:
+</p>
+$$
+\begin{align}
+V_p^{n+1}\totalconc{i}^{n+1}
++ \Delta t \cdot\theta\cdot\displaystyle\sum_{A_f\in{A}}(Q_{out}\totalconc{i})_f^{n+1}
+&= V_p^{n}\totalconc{i}^{n} \nonumber \\
+&+ \Delta t \cdot\theta\cdot\displaystyle\sum_{A_f\in{A}}(Q_{in}\totalconc{i})_f^{n+1} \nonumber \\
+&+ \Delta t \cdot\theta \cdot V_p^{n+1} r_{i}^{n+1}\nonumber \\
+&+\Delta t \cdot(1-\theta)\left(
+\displaystyle\sum_{A_f\in{A}}(Q_{in}\totalconc{i})_f^{n}
+-\displaystyle\sum_{A_f\in{A}}(Q_{out}\totalconc{i})_f^{n}
+\right) \nonumber \\
+&+ \Delta t \cdot(1-\theta)\cdot V_p^{n} r_{i}^{n}
+\,.
+\tag{9}
+\end{align}
+$$
+
+<p>Next, we apply <em>upstream weighting</em>:</p>
+$$
+\begin{align}
+\totalconc{i}^{n+1}\left(
+V_p^{n+1} + \Delta t \cdot\theta\displaystyle\sum_{A_f\in{A}} Q_{out, f}^{n+1}
+\right)
+&= V_p^{n}\totalconc{i}^{n} \nonumber \\
+&+ \Delta t \cdot\theta\cdot\displaystyle\sum_{A_f\in{A}}(Q_{in}\totalconc{i})_f^{n+1} \nonumber \\
+&+ \Delta t \cdot\theta \cdot V_p^{n+1} r_{i}^{n+1} \nonumber \\
+&+\Delta t \cdot(1-\theta)\cdot\displaystyle\sum_{A_f\in{A}}(Q_{in}\totalconc{i})_f^{n}\nonumber \\
+&-\Delta t \cdot(1-\theta)\cdot \totalconc{i}^{n}\displaystyle\sum_{A_f\in{A}} Q_{out, f}^{n} \nonumber \\
+&+ \Delta t \cdot(1-\theta)\cdot V_p^{n} r_{i}^{n}
+\,.
+\tag{10}
+\end{align}
+$$
+
+<p>If we specialize to an <em>implicit</em> time-discretization (\( \theta=1 \)), we get:</p>
+$$
+\begin{align}
+\totalconc{i}^{n+1} = \frac{V_p^{n}\totalconc{i}^{n} + \Delta t \cdot\left(C_{\text{inflow}}^{n+1}+  V_p^{n+1} r_{i}^{n+1}\right)}
+{V_p^{n+1} + \Delta t \cdot Q_{out}^{n+1}}
+\,,
+\tag{11}
+\end{align}
+$$
+
+<p>in which we have defined</p>
+$$
+\begin{align}
+C_{\text{inflow}} &\equiv \displaystyle\sum_{A_f\in{A}}(Q_{in}\totalconc{i})_f \,,\text{ and} 
+\tag{12}\\
+Q_{out} &\equiv \displaystyle\sum_{A_f\in{A}} Q_{out, f} \,.
+\tag{13}
+\end{align}
+$$
+
+<p>On the other hand, an explicit time discretization (\( \theta=0 \)) yields:</p>
+$$
+\begin{align}
+\totalconc{i}^{n+1} = \frac{
+\totalconc{i}^{n}\left(V_p^{n} - \Delta t Q_{out}^{n}\right)
++ \Delta t\cdot\left(C_{\text{inflow}}^{n} + V_p^{n}r_{i}^{n}\right)}
+{V_p^{n+1}}\,.
+\tag{14}
+\end{align}
+$$
+<h1 id="bibliography" class="anchor">Bibliography </h1>
+
+<!-- begin bibliography -->
+<ol>
+ <li> <div id="helgeson1974theoretical"></div> <b>H. C. Helgeson and D. H. Kirkham</b>.  Theoretical Prediction of the Thermodynamic Behavior of Aqueous Electrolytes at High Pressures and Temperatures; I, Summary of the Thermodynamic/electrostatic Properties of the Solvent, <em>American Journal of Science</em>, 274(10), pp. 1089-1198, 1974.</li>
+ <li> <div id="helgeson1981theoretical"></div> <b>H. C. Helgeson, D. H. Kirkham and G. C. Flowers</b>.  Theoretical Prediction of the Thermodynamic Behavior of Aqueous Electrolytes by High Pressures and Temperatures; IV, Calculation of Activity Coefficients, Osmotic Coefficients, and Apparent Molal and Standard and Relative Partial Molal Properties to 600 Degrees C and 5kb, <em>American journal of science</em>, 281(10), pp. 1249-1516, 1981.</li>
+ <li> <div id="johnson1992supcrt92"></div> <b>J. W. Johnson, E. H. Oelkers and H. C. Helgeson</b>.  SUPCRT92: a Software Package for Calculating the Standard Molal Thermodynamic Properties of Minerals, Gases, Aqueous Species, and Reactions From 1 to 5000 Bar and 0 to 1000 C, <em>Computers &amp; Geosciences</em>, 18(7), pp. 899-947, 1992.</li>
+ <li> <div id="hirsch2007numerical"></div> <b>C. Hirsch</b>.  <em>Numerical Computation of Internal and External Flows: the Fundamentals of Computational Fluid Dynamics</em>, Elsevier, 2007.</li>
+</ol>
+<!-- end bibliography -->
+<p>
+<!-- navigation buttons at the bottom of the page -->
+<ul class="pager">
+</ul>
+<!-- ------------------- end of main content --------------- -->
+</div>  <!-- end container -->
+<!-- include javascript, jQuery *first* -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+<!-- Bootstrap footer
+<footer>
+<a href="https://..."><img width="250" align=right src="https://..."></a>
+</footer>
+-->
+</body>
+</html>
+

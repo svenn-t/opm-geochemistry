@@ -1,0 +1,24 @@
+GEOCHEM
+
+equilibrate 1
+include "ions.txt"
+
+SOLUTION 0
+pH 7 charge
+K               0.2e-3
+NO3             1.2e-3
+SO4		0.4e-3
+Na              1.8e-3
+/end
+
+iexchange
+Z+ 1.1e-3
+/ end
+
+chemtol
+1e-8  1e-5
+/end
+
+
+
+/end

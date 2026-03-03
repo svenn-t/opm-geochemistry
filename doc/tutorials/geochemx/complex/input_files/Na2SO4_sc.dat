@@ -1,0 +1,27 @@
+geochem
+debug 1
+equilibrate 0 
+solution 0
+--Solution to equilibrate
+pH 7 charge
+Na 0.48
+SO4 0.24
+/end
+
+complex
+method 1
+#specific surface area m^2/L pore volume, size of diffusion layer
+s_area 1000.0 
+#Name sites/nm^2
+GCa 2
+GCO3 2
+/ end
+
+
+chemtol
+1e-8  1e-5
+/end
+
+
+/end
+

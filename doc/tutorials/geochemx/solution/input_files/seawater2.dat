@@ -1,0 +1,26 @@
+GEOCHEM
+Temp 25
+Pres 1.01325e5
+debug 1
+
+
+SOLUTION 0
+pH 7 charge
+pe 2 
+Na 0.48
+K 0.01
+Mg 0.054
+Ca 0.01
+SO4 0.028 as HS
+HCO3 0.00267
+Cl 0.5
+/end
+
+
+chemtol
+1e-8  1e-5
+/end
+
+
+/end
+

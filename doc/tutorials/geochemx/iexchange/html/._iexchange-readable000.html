@@ -1,0 +1,443 @@
+<!--
+File automatically generated using DocOnce (https://github.com/doconce/doconce/):
+doconce format html main_iexchange.do.txt --html_style=bootswatch_readable --html_output=iexchange-readable --html_code_style=inherit --no_abort
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Equilibrium with exchange sites - `IEXCHANGE` keyword">
+<title>Equilibrium with exchange sites - `IEXCHANGE` keyword</title>
+<!-- Bootstrap style: bootswatch_readable -->
+<!-- doconce format html main_iexchange.do.txt --html_style=bootswatch_readable --html_output=iexchange-readable --html_code_style=inherit --no_abort -->
+<link href="https://netdna.bootstrapcdn.com/bootswatch/3.1.1/readable/bootstrap.min.css" rel="stylesheet">
+<!-- not necessary
+<link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+-->
+<style type="text/css">
+/* Let inline verbatim have the same color as the surroundings */
+code { color: inherit; background-color: transparent; }
+/* Add scrollbar to dropdown menus in bootstrap navigation bar */
+.dropdown-menu {
+   height: auto;
+   max-height: 400px;
+   overflow-x: hidden;
+}
+/* Adds an invisible element before each target to offset for the navigation
+   bar */
+.anchor::before {
+  content:"";
+  display:block;
+  height:64px;      /* fixed header height for style bootswatch_readable */
+  margin:-64px 0 0; /* negative fixed header height */
+}
+</style>
+</head>
+
+<!-- tocinfo
+{'highest level': 1,
+ 'sections': [('Table of contents',
+               1,
+               'table_of_contents',
+               'table_of_contents'),
+              ('Input file', 2, None, 'input-file'),
+              ('Description of output', 2, None, 'description-of-output'),
+              ('Equilibrium without changing solution composition',
+               2,
+               None,
+               'equilibrium-without-changing-solution-composition'),
+              ('Ion exchange with positive exchange sites',
+               1,
+               None,
+               'ion-exchange-with-positive-exchange-sites'),
+              ('Bibliography', 1, None, 'bibliography')]}
+end of tocinfo -->
+
+<body>
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+     equationNumbers: {  autoNumber: "none"  },
+     extensions: ["AMSmath.js", "AMSsymbols.js", "autobold.js", "color.js"]
+  }
+});
+</script>
+<script type="text/javascript" async
+ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+<!-- newcommands_keep.tex -->
+$$
+\newcommand{\logn}{\log_{10}}
+\newcommand{\NO}{\mathrm{NO_3^{-}}}
+\newcommand{\Ca}{\mathrm{Ca^{2+}}}
+\newcommand{\SO}{\mathrm{SO_{4}^{2-}}}
+\newcommand{\K}{\mathrm{K^{+}}}
+\newcommand{\HP}{\mathrm{H^{+}}}
+\newcommand{\Na}{\mathrm{Na^{+}}}
+$$
+
+
+
+<!-- Bootstrap navigation bar -->
+<div class="navbar navbar-default navbar-fixed-top">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="iexchange-readable.html">Equilibrium with exchange sites - `IEXCHANGE` keyword</a>
+  </div>
+  <div class="navbar-collapse collapse navbar-responsive-collapse">
+    <ul class="nav navbar-nav navbar-right">
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+     <!-- navigation toc: --> <li><a href="#table_of_contents" style="font-size: 80%;"><b>Table of contents</b></a></li>
+     <!-- navigation toc: --> <li><a href="#input-file" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Input file</a></li>
+     <!-- navigation toc: --> <li><a href="#description-of-output" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Description of output</a></li>
+     <!-- navigation toc: --> <li><a href="#equilibrium-without-changing-solution-composition" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Equilibrium without changing solution composition</a></li>
+     <!-- navigation toc: --> <li><a href="#ion-exchange-with-positive-exchange-sites" style="font-size: 80%;"><b>Ion exchange with positive exchange sites</b></a></li>
+     <!-- navigation toc: --> <li><a href="#bibliography" style="font-size: 80%;"><b>Bibliography</b></a></li>
+
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+</div> <!-- end of navigation bar -->
+<div class="container">
+<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p> <!-- add vertical space -->
+<a name="part0000"></a>
+<!-- ------------------- main content ---------------------- -->
+<div class="jumbotron">
+<center>
+<h1>Equilibrium with exchange sites - <code>IEXCHANGE</code> keyword</h1>
+</center>  <!-- document title -->
+
+
+</div> <!-- end jumbotron -->
+<h1 id="table_of_contents">Table of contents</h1>
+
+<div class='toc'>
+<p><span class="tab"> <a href="#input-file"> Input file </a></p>
+<p><span class="tab"> <a href="#description-of-output"> Description of output </a></p>
+<p><span class="tab"> <a href="#equilibrium-without-changing-solution-composition"> Equilibrium without changing solution composition </a></p>
+<p><a href="#ion-exchange-with-positive-exchange-sites"> Ion exchange with positive exchange sites </a></p>
+<p><a href="#bibliography"> Bibliography </a></p>
+</div>
+<br>
+
+<p>To model ion exchange one need to use the <code>IEXCHANGE</code> keyword. For each ion exchange basis specie in the database, <code>GEOCHEMX</code> reads two items which must be on the same line: name of the exchanger followed by the exchange capacity in units of eq/L. A default exchanger \( X=X^{-} \) is hard-coded into the database, and may be entered either with or without the charge included. For custom exchangers (see examples further below), the charge should be included, e.g., <code>Z+ 0.01</code>, to model positive exchange sites.</p>
+<h2 id="input-file" class="anchor">Input file </h2>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">GEOCHEM
+
+SOLUTION 0
+pH 7 charge
+K                0.2e-3
+NO3             1.2e-3
+Na               1.0e-3
+/end
+
+iexchange
+X 1.1e-3
+/ end
+
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>
+<b>Explanation of input file:</b>
+Note that the solution keyword is described in the <a href="../../solution/html/solution-readable.html" target="_self">solution example</a>. To model exchange capacity of e.g. a clay mineral or organic matter, we need to invoke the <code>IEXCHANGE</code> keyword.
+</p>
+<dl>
+<dt><code>IEXCHANGE .. /end</code>:<dd> 
+<p>  Defines an ion exchange calculation block.</p>
+<dt><code>X</code>:<dd> 
+<p>  is the name of the ion exchanger</p>
+<dt><code>1.1e-3</code>:<dd> 
+<p>  is the total exchange capacity (in mol/kg water equivalent).</p>
+</dl>
+<p>When run, <code>GeoChemX</code> will:</p>
+
+<ol>
+<li> Create a solution at pH 7.</li>
+<li> Add the dissolved ions \( \K \), \( \NO \), and \( \Na \).</li>
+<li> Perform a charge-balance adjustment using \( \HP \).</li>
+<li> Add an ion-exchange phase with \( 1.1\cdot 10^ {-3} \) mol of exchange sites.</li>
+<li> Compute how positive ions (\( \K \), \( \Na \), \( \Ca \), \( \HP \), etc.) partition between:</li>
+<ul>
+  <li> aqueous phase</li>
+  <li> exchange sites</li>
+</ul>
+</ol>
+<h2 id="description-of-output" class="anchor">Description of output </h2>
+<p>The \( pH \) of the solution is close to 3, this is because positive ions are pulled from the solution onto the ion exchanger.
+In the file <code>&lt;root name&gt;_solution.out</code>, the following table is given (for description of the other output see <a href="../../solution/html/solution-readable.html" target="_self">solution example</a>)
+</p>
+
+<div class="row">
+  <div class="col-xs-8">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b>&#65279;Species</b></td> <td align="center"><b>Concentration</b></td> <td align="center"><b>Equivalents</b></td> <td align="center"><b>Equivalent fraction</b></td> <td align="center"><b>Log gamma </b></td> <td align="center"><b>Log K</b></td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   NaX                </td> <td align="center">   9.07E-04         </td> <td align="center">   9.07E-04       </td> <td align="center">   8.24E-01               </td> <td align="center">   -0.0165962    </td> <td align="center">   0        </td> </tr>
+<tr><td align="center">   KX                 </td> <td align="center">   1.96E-04         </td> <td align="center">   1.96E-04       </td> <td align="center">   1.79E-01               </td> <td align="center">   -0.0167785    </td> <td align="center">   -0.7     </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-8 -->
+</div> <!-- cell row -->
+
+<p>This table describes the composition of exchange sites (<code>X</code>) in an ion-exchange model.
+Each row represents an exchange complex, such as <code>NaX</code> or <code>KX</code>, where a cation (\( \Na \), \( \K \)) is bound to an exchange site (<code>X&#8315;</code>).
+</p>
+
+<dl>
+<dt><code>Species</code>:<dd> 
+<p>  name of the exchange complex</p>
+<dt><code>Concentration</code>:<dd> 
+<p>  Total amount (mol/kg water) of this surface species</p>
+<dt><code>Equivalents</code>:<dd> 
+<p>  Because \( \Na \) and \( \K \) both have charge +1, equivalents = concentration. If you had CaX$_2$ , equivalents would be 2 \( \times \) concentration.</p>
+<dt><code>Equivalent fraction</code>:<dd> 
+<p>  Fraction of total exchange capacity occupied by that cation. They should sum to one, decreasing <code>chemtol</code> would make the sum closer to one.  </p>
+<ul>
+  <li> NaX = 0.824 \( \to \) 82.4 \( \% \) of exchange sites are Na-bound</li>
+  <li> KX = 0.179 \( \to \)  17.9 \( \% \) are K-bound</li>
+</ul>
+<dt><code>Log gamma</code>:<dd> 
+<p>  Logarithm of the activity coefficient of the exchange species. Slightly negative values indicate small non-ideality on the exchange surface. Very small magnitude, behavior is close to ideal.</p>
+<dt><code>Log K</code>:<dd> 
+<p>  The log-equilibrium constant for the exchange reaction. For KX, \( \log K=&#8722;0.7 \). This is often defined relative to NaX, which typically has \( \log K = 0 \) (reference state). Interpretation: \( \K \) binds slightly less strongly to exchange sites than \( \Na \) under the model assumptions.</p>
+</dl>
+<h2 id="equilibrium-without-changing-solution-composition" class="anchor">Equilibrium without changing solution composition </h2>
+<p>In many cases one wants to calculate the ion exchange composition <em>without</em> changing the solution cations. By using the <code>equilibrate</code> keyword <code>GeoChemX</code> will adjust the exchange composition, and at the same time keep bulk concentration constant.    </p>
+
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">GEOCHEM
+
+equilibrate 1
+
+SOLUTION 0
+pH 7 charge
+K            0.2e-3
+NO3          1.2e-3
+Na           1.0e-3
+/end
+
+iexchange
+X 1.1e-3
+/ end
+
+chemtol
+1e-8  1e-5
+/end
+
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Note that we have increases the accuracy on the mass balance, by the <code>chemtol</code> keyword. Running <code>GeoChemX</code> gives a final pH close to 7 and the following exchange composition</p>
+
+<div class="row">
+  <div class="col-xs-8">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b>&#65279;Species</b></td> <td align="center"><b>Concentration</b></td> <td align="center"><b>Equivalents</b></td> <td align="center"><b>Equivalent fraction</b></td> <td align="center"><b>Log gamma </b></td> <td align="center"><b>Log K</b></td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   NaX                </td> <td align="center">   5.49E-04         </td> <td align="center">   5.49E-04       </td> <td align="center">   4.99E-01               </td> <td align="center">   -0.0165936    </td> <td align="center">   0        </td> </tr>
+<tr><td align="center">   KX                 </td> <td align="center">   5.51E-04         </td> <td align="center">   5.51E-04       </td> <td align="center">   5.01E-01               </td> <td align="center">   -0.0167758    </td> <td align="center">   -0.7     </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-8 -->
+</div> <!-- cell row -->
+
+<p>Note that the sum of equivalent fractions are now 1.</p>
+<h1 id="ion-exchange-with-positive-exchange-sites" class="anchor">Ion exchange with positive exchange sites </h1>
+
+<p>It is possible to add new species to model e.g. positive exchange sites, which might be important for chalk <a href="#nodland2024new">[1]</a>. To illustrate we introduce a positive exchange site <code>Z+</code></p>
+
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">GEOCHEM
+
+equilibrate 1
+include &quot;ions.txt&quot;
+
+SOLUTION 0
+pH 7 charge
+K               0.2e-3
+NO3             1.2e-3
+SO4		0.4e-3
+Na              1.8e-3
+/end
+
+iexchange
+Z+ 1.1e-3
+/ end
+
+chemtol
+1e-8  1e-5
+/end
+
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>New specie definition has to be included in a separate file <code>ions.txt</code>, using the <code>include</code> keyword.</p>
+
+<p>
+<b>Explanation of input file <code>ions_txt</code>:</b>
+</p>
+
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">EXCHANGE_SPECIES
+#name 
+Z+  
+/end
+
+SECONDARY_SPECIES
+SO4Z2 = 2Z+ + SO4-2 / ANA  -0.8 /
+ZNO3   = Z+ + NO3- /ANA -0.7/
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<dl>
+<dt><code>EXCHANGE_SPECIES</code>:<dd> 
+<p>  Defines the exchange master species name(s) used by the exchanger, note the charge needs to be included.</p>
+<dt><code>SECONDARY_SPECIES</code>:<dd> 
+<p>  Secondary species that involve the exchange site <code>Z+</code> and aqueous anions (\( \SO \), \( \NO \)). Each line is a mass-action reaction with an associated \( \log K \) (formation constant).</p>
+<dt><code>ANA</code>:<dd> 
+<p>  Analytical formula for \( \log K \), defined in the equation below , where \( T \) is in Kelvin. </p>
+</dl>
+$$
+\begin{equation}
+\logn K = a_1 + a_2 T + \frac{a_3}{T} + a_4\logn{T} + \frac{a_5}{T^2} + a_6 T^2\,
+\tag{1}
+\end{equation}
+$$
+
+<p>Running <code>GeoChemX</code> gives a final pH close to 7 and the following exchange composition</p>
+
+<div class="row">
+  <div class="col-xs-8">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b>&#65279;Species</b></td> <td align="center"><b>Concentration</b></td> <td align="center"><b>Equivalents</b></td> <td align="center"><b>Equivalent fraction</b></td> <td align="center"><b>Log gamma </b></td> <td align="center"><b>Log K</b></td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   SO4Z2              </td> <td align="center">   4.88E-04         </td> <td align="center">   9.75E-04       </td> <td align="center">   8.87E-01               </td> <td align="center">   -0.0920841    </td> <td align="center">   -0.8     </td> </tr>
+<tr><td align="center">   ZNO3               </td> <td align="center">   1.25E-04         </td> <td align="center">   1.25E-04       </td> <td align="center">   1.13E-01               </td> <td align="center">   -0.0233732    </td> <td align="center">   -0.7     </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-8 -->
+</div> <!-- cell row -->
+
+<br />
+<h1 id="bibliography" class="anchor">Bibliography </h1>
+
+<!-- begin bibliography -->
+<ol>
+ <li> <div id="nodland2024new"></div> <b>O. Nodland and A. Hiorth</b>.  A New Formulation of the Surface Charge/surface Potential Relationship in Electrolytes With Valence Less Than Three, <em>Computational Geosciences</em>, 28(2), pp. 289-304, 2024.</li>
+</ol>
+<!-- end bibliography -->
+<p>
+<!-- navigation buttons at the bottom of the page -->
+<ul class="pager">
+</ul>
+<!-- ------------------- end of main content --------------- -->
+</div>  <!-- end container -->
+<!-- include javascript, jQuery *first* -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+<!-- Bootstrap footer
+<footer>
+<a href="https://..."><img width="250" align=right src="https://..."></a>
+</footer>
+-->
+</body>
+</html>
+

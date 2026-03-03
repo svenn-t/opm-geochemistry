@@ -1,0 +1,448 @@
+<!--
+File automatically generated using DocOnce (https://github.com/doconce/doconce/):
+doconce format html main_transportII.do.txt --html_style=bootswatch_readable --html_output=transportII-readable --html_code_style=inherit
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Adsorption of sulphate and cation exchange in core">
+<title>Adsorption of sulphate and cation exchange in core</title>
+<!-- Bootstrap style: bootswatch_readable -->
+<!-- doconce format html main_transportII.do.txt --html_style=bootswatch_readable --html_output=transportII-readable --html_code_style=inherit -->
+<link href="https://netdna.bootstrapcdn.com/bootswatch/3.1.1/readable/bootstrap.min.css" rel="stylesheet">
+<!-- not necessary
+<link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+-->
+<style type="text/css">
+/* Let inline verbatim have the same color as the surroundings */
+code { color: inherit; background-color: transparent; }
+/* Add scrollbar to dropdown menus in bootstrap navigation bar */
+.dropdown-menu {
+   height: auto;
+   max-height: 400px;
+   overflow-x: hidden;
+}
+/* Adds an invisible element before each target to offset for the navigation
+   bar */
+.anchor::before {
+  content:"";
+  display:block;
+  height:64px;      /* fixed header height for style bootswatch_readable */
+  margin:-64px 0 0; /* negative fixed header height */
+}
+</style>
+</head>
+
+<!-- tocinfo
+{'highest level': 1,
+ 'sections': [('Table of contents',
+               1,
+               'table_of_contents',
+               'table_of_contents'),
+              ('Introduction', 1, None, 'introduction'),
+              ('Input file', 2, None, 'input-file'),
+              ('Running code', 2, None, 'running-code'),
+              ('Network Common Data Form', 1, None, 'network-common-data-form'),
+              ('Loading the NetCDF file in Python',
+               2,
+               None,
+               'loading-the-netcdf-file-in-python'),
+              ('Plotting NetCDF file in Python',
+               2,
+               None,
+               'plotting-netcdf-file-in-python'),
+              ('Bibliography', 1, None, 'bibliography')]}
+end of tocinfo -->
+
+<body>
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+     equationNumbers: {  autoNumber: "none"  },
+     extensions: ["AMSmath.js", "AMSsymbols.js", "autobold.js", "color.js"]
+  }
+});
+</script>
+<script type="text/javascript" async
+ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+<!-- newcommands_keep.tex -->
+$$
+\newcommand{\Ca}{\mathrm{Ca^{2+}}}
+\newcommand{\Mg}{\mathrm{Mg^{2+}}}
+$$
+
+
+
+<!-- Bootstrap navigation bar -->
+<div class="navbar navbar-default navbar-fixed-top">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="ransportII-readable.html">Adsorption of sulphate and cation exchange in core</a>
+  </div>
+  <div class="navbar-collapse collapse navbar-responsive-collapse">
+    <ul class="nav navbar-nav navbar-right">
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+     <!-- navigation toc: --> <li><a href="#table_of_contents" style="font-size: 80%;"><b>Table of contents</b></a></li>
+     <!-- navigation toc: --> <li><a href="#introduction" style="font-size: 80%;"><b>Introduction</b></a></li>
+     <!-- navigation toc: --> <li><a href="#input-file" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Input file</a></li>
+     <!-- navigation toc: --> <li><a href="#running-code" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Running code</a></li>
+     <!-- navigation toc: --> <li><a href="#network-common-data-form" style="font-size: 80%;"><b>Network Common Data Form</b></a></li>
+     <!-- navigation toc: --> <li><a href="#loading-the-netcdf-file-in-python" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Loading the NetCDF file in Python</a></li>
+     <!-- navigation toc: --> <li><a href="#plotting-netcdf-file-in-python" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Plotting NetCDF file in Python</a></li>
+     <!-- navigation toc: --> <li><a href="#bibliography" style="font-size: 80%;"><b>Bibliography</b></a></li>
+
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+</div> <!-- end of navigation bar -->
+<div class="container">
+<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p> <!-- add vertical space -->
+<a name="part0000"></a>
+<!-- ------------------- main content ---------------------- -->
+<div class="jumbotron">
+<center>
+<h1>Adsorption of sulphate and cation exchange in core</h1>
+</center>  <!-- document title -->
+
+
+</div> <!-- end jumbotron -->
+<h1 id="table_of_contents">Table of contents</h1>
+
+<div class='toc'>
+<p><a href="#introduction"> Introduction </a></p>
+<p><span class="tab"> <a href="#input-file"> Input file </a></p>
+<p><span class="tab"> <a href="#running-code"> Running code </a></p>
+<p><a href="#network-common-data-form"> Network Common Data Form </a></p>
+<p><span class="tab"> <a href="#loading-the-netcdf-file-in-python"> Loading the NetCDF file in Python </a></p>
+<p><span class="tab"> <a href="#plotting-netcdf-file-in-python"> Plotting NetCDF file in Python </a></p>
+<p><a href="#bibliography"> Bibliography </a></p>
+</div>
+<br>
+<h1 id="introduction" class="anchor">Introduction </h1>
+
+<p>Adsorption of sulphate has been the subject of much research as it is believed to be one of the key players of wettability alteration in chalk <a href="#fathi2010smart">[1]</a>. In many core experiments sulphate adsorption is also used to measure the wettability of rock material <a href="#strand2006wettability">[2]</a>. The adsorption of sulphate is measured relative to a an inert tracer like \( \text{SCN}^&#8315; \), typically what one observe and reports in publications are the delay of the sulphate ion relative to \( \text{SCN}^&#8315; \). This is illustrated below using data from <a href="#hiorth2011effect">[3]</a> <a href="#megawati2013impact">[4]</a>.</p>
+
+<center> <!-- figure label: --> <div id="fig:tr:sulph"></div> <!-- FIGURE -->
+<hr class="figure">
+<center>
+<p class="caption">Figure 1: Experimental data <a href="#megawati2013impact">[4]</a> from a Liege chalk core flood, where there is a delay of sulphate.  <!-- caption label: fig:tr:sulph --></p>
+</center>
+<p><img src="fig-transportII/sulphate_anion.png" width="800" align="bottom"></p>
+</center>
+
+<p>The area between the tracer and sulphate curve is suggested to be a direct measure of wettability <a href="#strand2006wettability">[2]</a>. However, the cation profiles are rarely shown in these experiments, in figure <a href="#fig:tr:sulph2">2</a> the measured cations are shown. </p>
+
+<center> <!-- figure label: --> <div id="fig:tr:sulph2"></div> <!-- FIGURE -->
+<hr class="figure">
+<center>
+<p class="caption">Figure 2: Full experimental ion profile <a href="#megawati2013impact">[4]</a> from a Liege chalk core flood.  <!-- caption label: fig:tr:sulph2 --></p>
+</center>
+<p><img src="fig-transportII/sulphate_cation.png" width="800" align="bottom"></p>
+</center>
+
+<p>The full ion profile reveals a complicated pattern, below we demonstrate how to model this data set using equilibrium reactions, ion exchange and surface complexation.</p>
+<h2 id="input-file" class="anchor">Input file </h2>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">Tf  24
+Temp 130
+Pres 800000.0
+Imp 0
+# ml/min
+VolRate 0.2
+# ml
+Volume 39.1
+NoBlocks 20
+Flush .7
+debug 0
+
+WriteNetCDF 1
+porosity 0.5
+
+BASIS_SPECIES
+# Name a0 Mw
+SCN- 5 58.08 / HKF 909090 9 /
+/end
+
+chemtol
+1e-7 1e-8
+/end
+
+INJECT 0
+#solution name, time, flow rate
+1 24 
+/end
+
+geochem
+
+solution 0 
+--Initial solution in column
+pH 7 charge
+HCO3  1.0E-08
+Ca  1.0E-08
+/end
+
+complex
+method 1
+#specific surface area m^2/L pore volume, size of diffusion layer
+s_area 5000.0 10
+#donnan
+#Name sites/nm^2
+GCa 4.95
+GCO3 4.95
+/ end
+
+iexchange
+X 0.09
+/ end
+
+equilibrium_phases
+calcite 1 0
+/end
+
+solution 1
+--Injected brine
+pH 7 charge
+Na  4.8E-02
+K  2.4E-02
+SCN-  2.4E-02
+SO4  2.4E-02
+/end
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>All the different blocks have been covered in <a href="../../solution/html/solution-readable.html" target="_self">solution example</a>, <a href="../../iexchange/html/iexchange-readable.html" target="_self">ion exchange example</a>, <a href="../../complex/html/complex-readable.html" target="_self">surface complex example</a>, and <a href="../../equilibrium_phases/html/equilibrium_phases-readable.html" target="_self">equilibrium phases example</a>. The transport module is described in <a href="../../transport/html/transport-readable.html" target="_self"> transport example</a> The effluent profiles for simulation and data is shown in figure <a href="#fig:tr:sulph3">3</a>.</p>
+
+<center> <!-- figure label: --> <div id="fig:tr:sulph3"></div> <!-- FIGURE -->
+<hr class="figure">
+<center>
+<p class="caption">Figure 3: Full experimental ion profile, dots <a href="#megawati2013impact">[4]</a>, and model results (solid lines).  <!-- caption label: fig:tr:sulph3 --></p>
+</center>
+<p><img src="fig-transportII/transport.png" width="800" align="bottom"></p>
+</center>
+
+<p>
+<b>Model assumptions:</b>
+</p>
+<ol>
+<li> local equilibrium between pore water and calcite, which is reasonable as the temperature is quite high</li>
+<li> local equilibrium between diffusive double layer and the calcite surface</li>
+<li> a quite high ion exchange capacity which is a consequence of non carbonate minerals, which is in line with experiments <a href="#megawati2013impact">[4]</a>.</li>
+</ol>
+<h2 id="running-code" class="anchor">Running code </h2>
+<p>The file is run by using <code>TRANSPORT</code> keyword on the command line</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">Terminal&gt;GeoChemX TRANSPORT &lt;input_file&gt;
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h1 id="network-common-data-form" class="anchor">Network Common Data Form </h1>
+<p>The solver can optionally write simulation results to a NetCDF (Network Common Data Form) file. NetCDF is a self-describing, binary file format widely used in the geosciences, climate modeling, and fluid dynamics.</p>
+
+<p>NetCDF files are particularly well suited for reactive transport simulations because they:</p>
+
+<p>/* Store multi-dimensional data (space \( \times \) time \( \times \) species)</p>
+<ul>
+<li> Preserve coordinate information (e.g., position, time)</li>
+<li> Are portable across platforms</li>
+<li> Can be efficiently read by Python, MATLAB, R, Julia, and visualization tools</li>
+</ul>
+<p>Here, NetCDF output is enabled using an input option such as:</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">WriteNetCDF 1
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>The output is written in the file <code>&lt;root_name&gt;_NC</code></p>
+
+<p>
+<b>Structure of the NetCDF dataset:</b>
+</p>
+
+<p>The NetCDF file contains:</p>
+<ul>
+<li> Dimensions</li>
+<li> \( X \) - spatial coordinate along the 1-D column</li>
+<li> \( T \) - simulation time</li>
+</ul>
+<p>
+<b>Variables:</b>
+Each aqueous component (e.g., \( \Ca \), \( \Mg \), Tracer) is stored as a variable with dimensions \( (T, X) \).
+</p>
+<h2 id="loading-the-netcdf-file-in-python" class="anchor">Loading the NetCDF file in Python </h2>
+<p>The recommended way to work with NetCDF output in Python is using xarray, which provides labeled, N-dimensional arrays.</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">import xarray as xr
+import matplotlib.pyplot as plt
+
+ds = xr.open_dataset(&quot;transport_NC&quot;)
+ds.load()   # read all variables into memory
+ds.close()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<dl>
+<dt><code>xr.open_dataset(...)</code>:<dd> 
+<p>  opens the NetCDF file lazily (data are not read immediately)</p>
+<dt><code>ds.load()</code>:<dd> 
+<p>  loads all variables into memory (recommended for small&#8211;medium datasets)</p>
+<dt><code>ds.close()</code>:<dd> 
+<p>  closes the file handle once data are loaded</p>
+</dl>
+<h2 id="plotting-netcdf-file-in-python" class="anchor">Plotting NetCDF file in Python </h2>
+<p>To plot chemical species as a function of time, one can use the following code,`DL_SO4` is the concentration of sulphate in the double layer and <code>ads_SO4</code> is the total sulphate concentration adsorbed i.e. double layer, surface complexation and on exchange sites.</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">ion = &#39;DL_SO4&#39;
+#ion = &#39;ads_SO4&#39;
+plt.figure(figsize=(8, 4))
+plt.pcolormesh(ds[&quot;X&quot;], ds[&quot;T&quot;], ds[ion], shading=&quot;auto&quot;)
+plt.colorbar(label=ion)
+plt.xlabel(&quot;X&quot;)
+plt.ylabel(&quot;Time&quot;)
+plt.title( ion + &quot; concentration&quot;)
+plt.show()
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<center> <!-- figure label: --> <div id="fig:transII:adsso"></div> <!-- FIGURE -->
+<hr class="figure">
+<center>
+<p class="caption">Figure 4: (left) total sulphate concentrationa and (right) sulphate in the diffusive layer.  <!-- caption label: fig:transII:adsso --></p>
+</center>
+<p><img src="fig-transportII/SO4_comb.png" width="800" align="bottom"></p>
+</center>
+
+<p>Figure <a href="#fig:transII:adsso">4</a> shows the time development and along the core of sulphate adsorbed and the double layer concentration. Note that there is a maximum concentration before it reaches steady state.</p>
+<h1 id="bibliography" class="anchor">Bibliography </h1>
+
+<!-- begin bibliography -->
+<ol>
+ <li> <div id="fathi2010smart"></div> <b>S. J. Fathi, T. Austad and S. Strand</b>.  Smart Water As a Wettability Modifier in Chalk: the Effect of Salinity and Ionic Composition, <em>Energy &amp; fuels</em>, 24(4), pp. 2514-2519, 2010.</li>
+ <li> <div id="strand2006wettability"></div> <b>S. Strand, E. J. Hognesen and T. Austad</b>.  Wettability Alteration of Carbonates—Effects of Potential Determining Ions (Ca2+ and SO42-) and Temperature, <em>Colloids and Surfaces A: Physicochemical and Engineering Aspects</em>, 275(1-3), pp. 1-10, 2006.</li>
+ <li> <div id="hiorth2011effect"></div> <b>A. Hiorth, M. Megawati and M. V. Madland</b>.  The Effect of Sulfate Adsorption on the Cation Exchange Capacity of High Porosity Chalks, <em>Twenty-first Annual Goldschmidt Conference</em>, 2011.</li>
+ <li> <div id="megawati2013impact"></div> <b>M. Megawati, A. Hiorth and M. Madland</b>.  The Impact of Surface Charge on the Mechanical Behavior of High-Porosity Chalk, <em>Rock mechanics and rock engineering</em>, 46(5), pp. 1073-1090, 2013.</li>
+</ol>
+<!-- end bibliography -->
+<p>
+<!-- navigation buttons at the bottom of the page -->
+<ul class="pager">
+</ul>
+<!-- ------------------- end of main content --------------- -->
+</div>  <!-- end container -->
+<!-- include javascript, jQuery *first* -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+<!-- Bootstrap footer
+<footer>
+<a href="https://..."><img width="250" align=right src="https://..."></a>
+</footer>
+-->
+</body>
+</html>
+

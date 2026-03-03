@@ -1,0 +1,16 @@
+from distutils.core import setup
+
+setup(
+    name='pygeochem',
+    version='0.1',
+    description='Python version of geochemical solver coded in C++',
+    author='Oddbjørn Nødland',
+    license='GNU LGPL v2.1',
+    packages = ['pygeochem'],
+    package_data={
+        'pygeochem': [
+            'project4py${PYTHON_MODULE_EXTENSION}',
+            'project4py/*'
+            ],
+    }
+)

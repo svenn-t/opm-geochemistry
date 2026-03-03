@@ -1,0 +1,11 @@
+SURFACE_SPECIES
+#name 
+GCO3_new-  
+/end
+
+SECONDARY_SPECIES
+GCO3_newNa  = GCO3_new- + Na+ / ANA  -0.8 /
+GCaSO4- = GCa+ + SO4-2 /ANA -1.5/
+/end
+
+

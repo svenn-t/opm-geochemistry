@@ -1,0 +1,33 @@
+# Useful links:
+#
+# - https://embeddedartistry.com/blog/2017/10/23/creating-and-enforcing-a-code-formatting-standard-with-clang-format/
+#
+#BasedOnStyle: LLVM  # https://llvm.org/docs/CodingStandards.html
+#BasedOnStyle: Microsoft  # https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/code-style-rule-options?view=vs-2017
+BasedOnStyle: None  # currently, no formatting
+
+IndentAccessModifiers: true
+IndentWidth: 4
+UseTab: Never
+
+Language: Cpp
+
+# Example: someLongFunction(argument1,
+#                           argument2,
+#                           argument3);
+#AlignAfterOpenBracket: Align
+
+#AllowShortFunctionsOnASingleLine: None
+#AllowShortIfStatementsOnASingleLine: true
+#AllowShortLoopsOnASingleLine: true
+#BreakBeforeBraces: Allman
+#ColumnLimit: 100
+#KeepEmptyLinesAtTheStartOfBlocks: true
+#SpaceAfterCStyleCast: true
+#Standard: Latest  # Cpp11
+
+# Maybe test...?
+#
+#SpacesBeforeTrailingComments: 1 (or 2?)
+#SpaceInEmptyParentheses: false
+#SpaceBeforeParens: ControlStatements
