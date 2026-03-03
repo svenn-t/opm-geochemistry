@@ -1,0 +1,6 @@
+BASIS_SPECIES
+# Name a0 Mw
+SCN- 5 58.08 / HKF 909090 9 /
+Tracer 5 5 /ANA 0 /
+/end
+

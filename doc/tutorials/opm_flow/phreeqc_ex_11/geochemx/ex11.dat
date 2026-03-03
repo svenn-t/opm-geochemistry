@@ -1,0 +1,40 @@
+Tf  24
+Imp 0
+VolRate 0.166666667
+Volume .08e3
+NoBlocks 40
+Flush 0.25
+debug 2
+WriteBlock 0
+WriteNetCDF 0
+Interpolate 0
+RateSurface 0
+punch 0
+porosity 1
+
+NumericalJacobian 0
+chemtol
+1e-7 1e-8
+/end
+
+geochem
+
+solution 0 
+-- Initial solution
+pH 7 charge
+Na               1.0e-3
+K                0.2e-3
+NO3             1.2e-3
+/end
+
+iexchange
+X 1.1e-3
+/ end
+
+solution 1
+--Injected solution
+Cl  1.2e-3
+Ca  0.6e-3
+/end
+
+/end

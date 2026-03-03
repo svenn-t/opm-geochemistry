@@ -1,0 +1,35 @@
+BASIS_SPECIES
+# Name a0 Mw HKF: DeltaG	DeltaH	S	a1	a2	a3	a4	c1	c2	omega
+HSd- 4 33.0729 / HKF 2860 -3850	16.3	5.0119	4.9799	3.4765	-2.9849	3.42	-6.27	1.441 /
+Hdg 4 2.0158    /HKF 4236 -1000	13.8	5.1427	4.7758	3.8729	-2.9764	27.6251	5.093	-0.209/
+Ndg 4 28.0134  /HKF 4347 -2495	22.9	6.2046	7.3685	2.8539	-3.0836	35.7911	8.3726	-0.3468/
+#Hdg 4 2.016 / ANA 0. /
+/end
+
+SECONDARY_SPECIES
+H2Sd = HSd- + H+ /HKF -6673	-9001	30	6.5097	6.7724	5.9646	-3.059	32.3	4.73	-0.1/
+/end
+
+MINERAL_PHASES
+#                       mol_volume	DeltaG	DeltaH	S	a1	a2	a3	a7
+Hdg,g = Hdg	    /HKF 0	0	 0      31.234	6.52	0.78	0.12	3000/
+H2Sd,g = HSd- + H+ /HKF 0	-8021	-4931	49.185	7.81	2.96	-0.46	2300/
+Ndg,g = Ndg        /HKF 0	0	0	45.796	6.83	0.9	-0.12	3000/ 
+/end
+
+# Some species that are minor and slows down calculations
+REMOVE_SPECIES
+HP2O7-3
+P2O7-4
+H3PO4
+H2P2O7-2
+HNO3
+H3P2O7-
+H4P2O7
+HCl
+S2O8-2
+S2O6-2
+S4O6-2
+S5O6-2
+S3O6-2
+/end

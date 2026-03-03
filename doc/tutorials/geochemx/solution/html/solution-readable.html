@@ -1,0 +1,813 @@
+<!--
+File automatically generated using DocOnce (https://github.com/doconce/doconce/):
+doconce format html main_solution.do.txt --html_style=bootswatch_readable --html_output=solution-readable --html_code_style=inherit
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Seawater speciation and the `SOLUTION` keyword">
+<title>Seawater speciation and the `SOLUTION` keyword</title>
+<!-- Bootstrap style: bootswatch_readable -->
+<!-- doconce format html main_solution.do.txt --html_style=bootswatch_readable --html_output=solution-readable --html_code_style=inherit -->
+<link href="https://netdna.bootstrapcdn.com/bootswatch/3.1.1/readable/bootstrap.min.css" rel="stylesheet">
+<!-- not necessary
+<link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+-->
+<style type="text/css">
+/* Let inline verbatim have the same color as the surroundings */
+code { color: inherit; background-color: transparent; }
+/* Add scrollbar to dropdown menus in bootstrap navigation bar */
+.dropdown-menu {
+   height: auto;
+   max-height: 400px;
+   overflow-x: hidden;
+}
+/* Adds an invisible element before each target to offset for the navigation
+   bar */
+.anchor::before {
+  content:"";
+  display:block;
+  height:64px;      /* fixed header height for style bootswatch_readable */
+  margin:-64px 0 0; /* negative fixed header height */
+}
+</style>
+</head>
+
+<!-- tocinfo
+{'highest level': 1,
+ 'sections': [('Table of contents',
+               1,
+               'table_of_contents',
+               'table_of_contents'),
+              ('Seawater speciation', 1, None, 'seawater-speciation'),
+              ('Input file', 2, None, 'input-file'),
+              ('Description of output', 2, None, 'description-of-output'),
+              ('`seawater_solution.out` Brief Explanation',
+               2,
+               None,
+               'seawater-solution-out-brief-explanation'),
+              ('`seawater_aq.out` Brief Explanation',
+               2,
+               None,
+               'seawater-aq-out-brief-explanation'),
+              ('`seawater_buffer.out` Brief Explanation',
+               2,
+               None,
+               'seawater-buffer-out-brief-explanation'),
+              ('`seawater_species.out` Brief Explanation',
+               2,
+               None,
+               'seawater-species-out-brief-explanation'),
+              ('Changing basis species `as` keyword',
+               1,
+               None,
+               'changing-basis-species-as-keyword'),
+              ('Specifying `pe`', 1, None, 'specifying-pe'),
+              ('Bibliography', 1, None, 'bibliography'),
+              ('Appendix: List of basis species',
+               1,
+               'sec:basis_species',
+               'sec:basis_species')]}
+end of tocinfo -->
+
+<body>
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+     equationNumbers: {  autoNumber: "none"  },
+     extensions: ["AMSmath.js", "AMSsymbols.js", "autobold.js", "color.js"]
+  }
+});
+</script>
+<script type="text/javascript" async
+ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+<!-- newcommands_keep.tex -->
+$$
+\newcommand{\COTH}{\mathrm{CO_3^{2-}}}
+\newcommand{\HCOT}{\mathrm{HCO_3^-}}
+\newcommand{\Ca}{\mathrm{Ca^{2+}}}
+\newcommand{\HTO}{\mathrm{H_2O}}
+\newcommand{\Mg}{\mathrm{Mg^{2+}}}
+\newcommand{\SO}{\mathrm{SO_{4}^{2-}}}
+\newcommand{\K}{\mathrm{K^{+}}}
+\newcommand{\HP}{\mathrm{H^{+}}}
+\newcommand{\Cl}{\mathrm{Cl^{-}}}
+\newcommand{\Na}{\mathrm{Na^{+}}}
+\newcommand{\MgCO}{\mathrm{MgCO_{3}^0}}
+\newcommand{\coa}{\mathrm{CO_2(aq)}}
+\newcommand{\equilarrow}{\rightleftharpoons}
+$$
+
+
+
+<!-- Bootstrap navigation bar -->
+<div class="navbar navbar-default navbar-fixed-top">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="solution-readable.html">Seawater speciation and the `SOLUTION` keyword</a>
+  </div>
+  <div class="navbar-collapse collapse navbar-responsive-collapse">
+    <ul class="nav navbar-nav navbar-right">
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+     <!-- navigation toc: --> <li><a href="#table_of_contents" style="font-size: 80%;"><b>Table of contents</b></a></li>
+     <!-- navigation toc: --> <li><a href="#seawater-speciation" style="font-size: 80%;"><b>Seawater speciation</b></a></li>
+     <!-- navigation toc: --> <li><a href="#input-file" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Input file</a></li>
+     <!-- navigation toc: --> <li><a href="#description-of-output" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Description of output</a></li>
+     <!-- navigation toc: --> <li><a href="#seawater-solution-out-brief-explanation" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;`seawater_solution.out` Brief Explanation</a></li>
+     <!-- navigation toc: --> <li><a href="#seawater-aq-out-brief-explanation" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;`seawater_aq.out` Brief Explanation</a></li>
+     <!-- navigation toc: --> <li><a href="#seawater-buffer-out-brief-explanation" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;`seawater_buffer.out` Brief Explanation</a></li>
+     <!-- navigation toc: --> <li><a href="#seawater-species-out-brief-explanation" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;`seawater_species.out` Brief Explanation</a></li>
+     <!-- navigation toc: --> <li><a href="#changing-basis-species-as-keyword" style="font-size: 80%;"><b>Changing basis species <code>as</code> keyword</b></a></li>
+     <!-- navigation toc: --> <li><a href="#specifying-pe" style="font-size: 80%;"><b>Specifying <code>pe</code></b></a></li>
+     <!-- navigation toc: --> <li><a href="#bibliography" style="font-size: 80%;"><b>Bibliography</b></a></li>
+     <!-- navigation toc: --> <li><a href="#sec:basis_species" style="font-size: 80%;"><b>Appendix: List of basis species</b></a></li>
+
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+</div> <!-- end of navigation bar -->
+<div class="container">
+<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p> <!-- add vertical space -->
+<a name="part0000"></a>
+<!-- ------------------- main content ---------------------- -->
+<div class="jumbotron">
+<center>
+<h1>Seawater speciation and the <code>SOLUTION</code> keyword</h1>
+</center>  <!-- document title -->
+
+
+</div> <!-- end jumbotron -->
+<h1 id="table_of_contents">Table of contents</h1>
+
+<div class='toc'>
+<p><a href="#seawater-speciation"> Seawater speciation  </a></p>
+<p><span class="tab"> <a href="#input-file"> Input file </a></p>
+<p><span class="tab"> <a href="#description-of-output"> Description of output </a></p>
+<p><span class="tab"> <a href="#seawater-solution-out-brief-explanation"> <code>seawater_solution.out</code> Brief Explanation </a></p>
+<p><span class="tab"> <a href="#seawater-aq-out-brief-explanation"> <code>seawater_aq.out</code> Brief Explanation </a></p>
+<p><span class="tab"> <a href="#seawater-buffer-out-brief-explanation"> <code>seawater_buffer.out</code> Brief Explanation </a></p>
+<p><span class="tab"> <a href="#seawater-species-out-brief-explanation"> <code>seawater_species.out</code> Brief Explanation </a></p>
+<p><a href="#changing-basis-species-as-keyword"> Changing basis species <code>as</code> keyword </a></p>
+<p><a href="#specifying-pe"> Specifying <code>pe</code> </a></p>
+<p><a href="#bibliography"> Bibliography </a></p>
+<p><a href="#sec:basis_species"> Appendix: List of basis species </a></p>
+</div>
+<br>
+<h1 id="seawater-speciation" class="anchor">Seawater speciation  </h1>
+<p>This tutorial showcase the <code>SOLUTION</code> keyword, and we use a typical seawater composition to demonstrate how the calculations are done. The distribution of the major species in seawater is shown in the tables below, see <a href="#garrels1965solutions">[1]</a> (p. 105) at ambient conditions.</p>
+
+<div class="row">
+  <div class="col-xs-12">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b>Metal (Me)</b></td> <td align="center"><b>Molality</b></td> <td align="center">Free ion (\( \% \))</td> <td align="center">Me-\( \SO \) (\( \% \))</td> <td align="center">Me-\( \HCOT \) (\( \% \))</td> <td align="center">Me-\( \COTH \) (\( \% \))</td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   \( \Na \)     </td> <td align="center">   0.48        </td> <td align="center">   99                     </td> <td align="center">   1                          </td> <td align="center">   0.04                         </td> <td align="center">   0.006                        </td> </tr>
+<tr><td align="center">   \( \Mg \)     </td> <td align="center">   0.054       </td> <td align="center">   86                     </td> <td align="center">   13                         </td> <td align="center">   0.6                          </td> <td align="center">   0.4                          </td> </tr>
+<tr><td align="center">   \( \Ca \)     </td> <td align="center">   0.01        </td> <td align="center">   90                     </td> <td align="center">   9                          </td> <td align="center">   0.6                          </td> <td align="center">   0.1                          </td> </tr>
+<tr><td align="center">   \( \K \)      </td> <td align="center">   0.01        </td> <td align="center">   98                     </td> <td align="center">   12                         </td> <td align="center">   -                            </td> <td align="center">   -                            </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-12 -->
+</div> <!-- cell row -->
+
+<div class="row">
+  <div class="col-xs-12">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b> Anion (An)</b></td> <td align="center"><b>Molality</b></td> <td align="center">Free ion (\( \% \))</td> <td align="center">\( \Ca \)-An (\( \% \))</td> <td align="center">\( \Mg \)-An (\( \% \))</td> <td align="center">\( \Na \)-An (\( \% \))</td> <td align="center">\( \K \)-An  (\( \% \))</td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   \( \SO \)      </td> <td align="center">   0.028       </td> <td align="center">   52                     </td> <td align="center">   3                          </td> <td align="center">   26                         </td> <td align="center">   19                         </td> <td align="center">   0.6                        </td> </tr>
+<tr><td align="center">   \( \HCOT \)    </td> <td align="center">   0.0024      </td> <td align="center">   76                     </td> <td align="center">   3                          </td> <td align="center">   14                         </td> <td align="center">   8                          </td> <td align="center">   -                          </td> </tr>
+<tr><td align="center">   \( \COTH \)    </td> <td align="center">   0.00027     </td> <td align="center">   9                      </td> <td align="center">   7                          </td> <td align="center">   72                         </td> <td align="center">   12                         </td> <td align="center">   -                          </td> </tr>
+<tr><td align="center">   \( \Cl \)      </td> <td align="center">   0.56        </td> <td align="center">   100                    </td> <td align="center">   -                          </td> <td align="center">   -                          </td> <td align="center">   -                          </td> <td align="center">   -                          </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-12 -->
+</div> <!-- cell row -->
+<p>The geochemical calculations are performed by  giving the <em>total concentration</em> of  <em>basis species</em>. The default basis species is a choice, and in <code>GeoChemX</code> we have chosen to use the basis species listed in  <a href="#sec:basis_species">Appendix: List of basis species</a>.</p>
+
+<div class="alert alert-block alert-success alert-text-normal"><b>changing basis species</b>
+<p>In <code>GeoChemX</code> it is possible to change the basis, see the example towards the end.</p>
+</div>
+
+<h2 id="input-file" class="anchor">Input file </h2>
+
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">GEOCHEM
+Temp 25
+Pres 1.01325e5
+debug 0
+
+SOLUTION 0
+pH 7 charge
+Na 0.48
+K 0.01
+Mg 0.054
+Ca 0.01
+SO4 0.028
+HCO3 0.00267
+Cl 0.56
+/end
+
+chemtol
+1e-8  1e-5
+/end
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>
+<b>Explanation of input file:</b>
+</p>
+
+<dl>
+<dt><code>GEOCHEM .. /end</code>:<dd> 
+<p>  Defines a GEOCHEM calculation block.</p>
+<dt><code>Temp</code>:<dd> 
+<p>  temperature of solution, units: Celsius, default 25 $^\circ$C</p>
+<dt><code>Pres</code>:<dd> 
+<p>  pressure of solution, units: Pascal, default 10$^5$ Pa</p>
+<dt><code>debug</code>:<dd> 
+<p>  controls level of debugging</p>
+<ul>
+  <li> 0 No additional debug information</li>
+  <li> 1 Prints debug data to screen and some extra files</li>
+</ul>
+<dt><code>SOLUTION &lt;name&gt;</code>:<dd> 
+<p>  Defines the aqueous solution to be modeled. <code>&lt;name&gt;</code> must be a unique identifier (in this case 0):</p>
+<ul>
+  <li> Specie names are listed (without charge), units: mol/kg water (Molality).</li>
+  <li> The solution block is terminated by <code>\end</code>.</li>
+</ul>
+<dt><code>pH 7 charge</code>:<dd> 
+<p>  the activity of H$^+$ is determined by charge balance and 7 tells the solver to use \( 10^{-7} \) as initial guess. Alternatively one can enter the total concentration of \( \HP \). However as the total concentration of <em>free hydrogen ions</em> can be negative in the calculations, the solver adds 1 to the hydrogen concentration. To be consistent one should then write <code>H 1.0000001</code>.</p>
+<dt><code>chemtol</code>:<dd> 
+<p>  Sets numerical convergence criteria, default is <code>1e-5 1e-5</code>.</p>
+<ul>
+  <li> Solver uses one loop for mass balance, and a second outer loop for pH or charge balance. The first number controls the convergence of mass balance and the second, charge balance.</li>
+  <li> <code>chemtol</code> block should be put at the end of the file.</li> 
+</ul>
+</dl>
+<p>The input file described above saved in <code>seawater.dat</code>, and the code can be run</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">Terminal&gt; GeoChemX EQSOLVER seawater.dat
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p><code>GeoChemX</code> produce four files with data, described below and one file named <code>converged.txt</code> containg 1 if converged and zero otherwise. </p>
+<h2 id="description-of-output" class="anchor">Description of output </h2>
+<p>If debug flag is zero there are four output files. The naming convention is root name and then extension <code>_solution.out</code>, <code>_aq.out</code>, <code>_buffer.out</code>, and <code>_species.out</code>. Each of the files are described below. Very briefly, the <code>_solution.out</code> file contains the most comprehensive description of the calculation. The other files contains subset of information, but in a tab separated format that can be easily read in pandas.</p>
+<h2 id="seawater-solution-out-brief-explanation" class="anchor"><code>seawater_solution.out</code> Brief Explanation </h2>
+
+<p>
+<b>1. Header: Surface Charge and Electrostatic Info.</b>
+</p>
+
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">    pH   Sch[C/m^2]   Sch_DL[C/m^2]   psi[mV]   F[C/mol]   S[m^2/L]   cbal[eq/L]
+    6.48826	 0	 0	 0	 96484.6	 1	3.6198588848623814e-09
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<dl>
+<dt><code>pH</code>:<dd> 
+<p>  6.48826</p>
+<dt><code>Sch, Sch_DL</code>:<dd> 
+<p>  Surface charge densities (C/m$^2$), here zero (no
+    surface).
+</p>
+<dt><code>psi</code>:<dd> 
+<p>  Surface potential (mV).</p>
+<dt><code>F</code>:<dd> 
+<p>  Faraday constant.</p>
+<dt><code>S</code>:<dd> 
+<p>  Specific surface area (m$^2$/L).</p>
+<dt><code>cbal</code>:<dd> 
+<p>  Charge balance error (eq/L).</p>
+</dl>
+<p>
+<b>2. Physical Properties.</b>
+</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">    Temp   Pres[bar]   Io_   permittivity   density_water[kg/m^3]
+    25     1.01325     0.649459   78.2439   997.048
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<dl>
+<dt><code>Temp</code>:<dd> 
+<p>  25 C</p>
+<dt><code>Pres</code>:<dd> 
+<p>  1.01325 bar</p>
+<dt><code>Io_</code>:<dd> 
+<p>  Ionic strength</p>
+<dt><code>Permittivity</code>:<dd> 
+<p>  Dielectric constant</p>
+<dt><code>Water density</code>:<dd> 
+<p>  density of water (not brine)</p>
+</dl>
+<p>
+<b>3. Double-Layer / Ion-Group Parameters.</b>
+</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">    n(1) n(-1) n(2) n(-2) g(1) g(-1) g(2) g(-2) frac_DL
+    0    0     0    0     0    0     0    0     1
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<ul>
+<li> Defines charge groups for electrostatic models.</li>
+<li> Here all are zero, no surface-complexation model.</li>
+<li> <em>frac_DL = 1</em>,  everything is in the bulk solution (volume of diffusive layer is zero)</li>
+</ul>
+<p>
+<b> 4. Species List and Type Flags.</b>
+</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">    Ca+2  Cl-  H+  H2O  HCO3-  K+  Mg+2  Na+  SO4-2  CaOH+ ...
+    type 0    0    0    0    0     0    0     0     0       ...
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<ul>
+<li> Lists all <em>aqueous species</em> considered, basis and secondary species.</li>
+<li> <code>type = 0</code> for all, i.e.  all are dissolved aqueous species.</li>
+</ul>
+<p>
+<b>5. Thermodynamic Data.</b>
+</p>
+
+<dl>
+<dt><code>log_a</code>:<dd> 
+<p>  Logarithm of species activity.</p>
+<dt><code>log_m</code>:<dd> 
+<p>  Logarithm of molality (mol/kg).</p>
+<dt><code>log_g</code>:<dd> 
+<p>  Logarithm of the activity coefficient \( \gamma \)</p>
+<dt><code>logK</code>:<dd> 
+<p>  Equilibrium constant for the formation reaction of each species.</p>
+<dt><code>charge / scharge</code>:<dd> 
+<p>  Electrical charge; surface charge contribution (0 here).</p>
+</dl>
+<p>
+<b>6. Species Concentrations.</b>
+</p>
+
+<p>Example:</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">    Species   ch   c_tot   c_tot_aq   c_tot_SC   c_tot_IO   c_dl
+    Ca+2       2   1.0e-02   1.0e-02    0            0           0
+    Cl-       -1   5.6e-01   5.6e-01    0            0           0
+    H+         1   1.00000010e+00	 9.99327309e-01   0   0   0
+    H2O        0   0                 0.999941391  0  0  0
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Field meanings:</p>
+
+<dl>
+<dt><code>c_tot</code>:<dd> 
+<p>  total input concentration</p>
+<dt><code>c_tot_aq</code>:<dd> 
+<p>  dissolved (aqueous) concentration</p>
+<dt><code>c_tot_SC / IO / dl</code>:<dd> 
+<p>  surface, inner/outer layer, diffuse layer (here all zero)</p>
+</dl>
+<div class="alert alert-block alert-success alert-text-normal"><b>Notice</b>
+
+<p>GEOCHEM offsets total hydrogen by +1 mol/kg,  hence <code>1.0000001</code>
+    for H+ total
+</p>
+</div>
+
+
+<p>
+<b>7. Mineral Saturation Indices (SI).</b>
+</p>
+
+<p>Example:</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">    Name      SI        logK        reaction
+    CALCITE   0.248389  1.84866     1Ca+2 -1H+ 1HCO3-
+    DOLOMITE  2.4845    2.5135      1Ca+2 -2H+ 2HCO3- 1Mg+2
+    HALITE   -2.61068   1.5855      1Cl- 1Na+
+    ANHYDRITE -0.9547  -4.30642	   +1Ca+2+1SO4-2
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<ul>
+<li> <code>SI</code> Saturation Index</li>
+<ul>
+  <li> \( SI > 0 \),  supersaturated</li>
+  <li> \( SI = 0 \), equilibrium</li>
+  <li> \( SI < 0 \), undersaturated</li>
+</ul>
+<li> <code>logK</code> Equilibrium constant for mineral.</li>
+<li> reaction: Dissolution/precipitation reaction for the mineral, note that the</li>
+</ul>
+<div class="alert alert-block alert-success alert-text-normal"><b>Notice</b>
+<p>All reactions are written in terms of basis species, the <code>logK</code> values are only valid for this specific basis combination.</p>
+</div>
+
+<h2 id="seawater-aq-out-brief-explanation" class="anchor"><code>seawater_aq.out</code> Brief Explanation </h2>
+<p>The file contains a tab separated table that lists aqueous species and ion pairs along with their:</p>
+
+<dl>
+<dt><code>log_m</code>:<dd> 
+<p>  log molality (mol/kg water)</p>
+<dt><code>log_a</code>:<dd> 
+<p>  log activity</p>
+<dt><code>log_g</code>:<dd> 
+<p>  log activity coefficient (\( \gamma \))</p>
+<dt><code>logK</code>:<dd> 
+<p>  equilibrium constant of formation (where applicable)</p>
+<dt><code>mol_volume</code>:<dd> 
+<p>  partial molal volume</p>
+<dt><code>reaction</code>:<dd> 
+<p>  formation reaction from basis species</p>
+</dl>
+<p>The species are listed in descendent order of concentration.</p>
+
+<div class="alert alert-block alert-success alert-text-normal"><b>\( \log K \) values</b>
+<p>The \( \log K \) values are <em>only valid for the specific reaction</em>, e.g. if one would like the \( \log K \) of the reaction \( \MgCO \equilarrow \Mg + \coa \), one need subtract \( \log K \) for the reaction \( \MgCO \) and \( \coa \) in the datafile.</p>
+</div>
+
+<h2 id="seawater-buffer-out-brief-explanation" class="anchor"><code>seawater_buffer.out</code> Brief Explanation </h2>
+
+<p>The file contains a tab separated table that lists minerals and gasses along with their:</p>
+
+<dl>
+<dt><code>SI</code>:<dd> 
+<p>  saturation index, for gases this would be equal to the partial pressure</p>
+<dt><code>logK</code>:<dd> 
+<p>  equilibrium constant of formation (where applicable)</p>
+<dt><code>reaction</code>:<dd> 
+<p>  formation reaction from basis species</p>
+</dl>
+<p>The minerals are listed in descendent order of saturation, i.e. the most supersaturated mineral at the top.</p>
+
+<div class="alert alert-block alert-success alert-text-normal"><b>\( \log K \) values</b>
+<p>The \( \log K \) values are <em>only valid for the specific reaction</em>, e.g. if one would like the \( \log K \) of the reaction \( \MgCO \equilarrow \Mg + \COTH \) (magnesite), one need subtract \( \log K \) for the reaction \( \MgCO \) in <em>this file</em> and \( \COTH \) in the <code>_aq.out</code> datafile.</p>
+</div>
+
+<h2 id="seawater-species-out-brief-explanation" class="anchor"><code>seawater_species.out</code> Brief Explanation </h2>
+
+<p>This file lists the total and partitioned concentrations of dissolved <em>basis</em> species in a geochemical solution. </p>
+
+<p>The file contains a tab separated table that lists basis species along with their:</p>
+
+<dl>
+<dt><code>ch</code>:<dd> 
+<p>  electrical charge </p>
+<dt><code>c_tot</code>:<dd> 
+<p>  total concentration at the start of simulation, units: mol/kg water</p>
+<dt><code>c_tot_aq</code>:<dd> 
+<p>  total aqueous concentration after the simulation, units: mol/kg water</p>
+<dt><code>c_tot_SC</code>:<dd> 
+<p>  total surface complex concentration after the simulation, units: mol/kg water</p>
+<dt><code>c_tot_IO</code>:<dd> 
+<p>  total ion exchange concentration after the simulation, units: mol/kg</p>
+<dt><code>c_dl</code>:<dd> 
+<p>  total concentration in the diffusive layer after the simulation, units: mol/kg </p>
+</dl>
+<h1 id="changing-basis-species-as-keyword" class="anchor">Changing basis species <code>as</code> keyword </h1>
+
+<p>The choice of basis species is flexible and can be modified by the user. This flexibility can be particularly useful when modeling brines or other systems in which the redox potential differs significantly from standard conditions. Under sufficiently reducing conditions, sulfur is preferentially present in reduced forms such as \( \text{HS}^&#8315; \) and \( \text{H}_2\text{S} \), whereas under oxidizing conditions sulfate, \( \SO \), is the dominant sulfur species. Using the same example as above we can now do the calculation using \( \text{HS}^&#8315; \)</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">SOLUTION 0
+pH 7 charge
+Na 0.48
+K 0.01
+Mg 0.054
+Ca 0.01
+SO4 0.028 as HS
+HCO3 0.00267
+Cl 0.56
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>This will a transform all reactions to use \( \text{HS}^&#8315; \) as basis specie and update \( \log K \) correspondingly. Note that in this case some minerals will not form, such as anhydrite. This is because now anhydrite cannot be written in terms of the basis species used.</p>
+<h1 id="specifying-pe" class="anchor">Specifying <code>pe</code> </h1>
+<p>pe is a dimensionless parameter that represents the electron activity (or redox potential) of a solution. It is analogous to pH, but instead of describing proton activity, it describes the tendency of a solution to accept or donate electrons.</p>
+
+<p>In geochemistry:</p>
+$$
+\begin{equation}
+\text{pe} = -\log a_e,
+\tag{1}
+\end{equation}
+$$
+
+<p>where \( a_e \) is the electron activity in moles per liter. By changing the pe one can control sulfate reduction reactions</p>
+$$
+\begin{equation}
+\SO + 8e^- + 10\HP \text{HS}^⁻\equilarrow \text{HS}^- + 4 \HTO.
+\tag{2}
+\end{equation}
+$$
+
+<p>A low pe will move the reaction to the right. In <code>GeoChemX</code> we can specify the pe as shown below, mathematically the electron is treated as a basis specie and the by defining the pe we just keep the activity of the electron constant as \( 10^-\text{pe} \).</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">SOLUTION 0
+pH 7 charge
+pe 2
+Na 0.48
+K 0.01
+Mg 0.054
+Ca 0.01
+SO4 0.028 as HS
+HCO3 0.00267
+Cl 0.5
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h1 id="bibliography" class="anchor">Bibliography </h1>
+
+<!-- begin bibliography -->
+<ol>
+ <li> <div id="garrels1965solutions"></div> <b>R. Garrels and C. Christ</b>.  <em>Solutions, Minerals, and Equilibria</em>, <em>Harper international student reprint</em>, Harper &amp; Row, 1965, <a href="https://books.google.no/books?id=OT5RAAAAMAAJ" target="_self"><tt>https://books.google.no/books?id=OT5RAAAAMAAJ</tt></a>.</li>
+</ol>
+<!-- end bibliography -->
+<h1 id="sec:basis_species" class="anchor">Appendix: List of basis species</h1>
+
+<!-- The table below shows all the possible aqueous species that can appear as -->
+<!-- basis species. However, as discussed in the main text, minerals are sometimes -->
+<!-- also swapped into the basis. -->
+
+<div class="row">
+  <div class="col-xs-6">
+    <table class="dotable table-striped table-hover table-condensed">
+<thead>
+<tr><td align="center"><b>  Name </b></td> <td align="center"><b>Nick Name</b></td> <td align="center"><b>Mol Weight</b></td> <td align="center"><b> Name </b></td> <td align="center"><b>Nick Name</b></td> <td align="center"><b>Mol Weight</b></td> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   Ag+        </td> <td align="center">   Ag           </td> <td align="center">   107.868       </td> <td align="center">   MoO4-2    </td> <td align="center">   MoO4         </td> <td align="center">   159.9376      </td> </tr>
+<tr><td align="center">   Al+3       </td> <td align="center">   Al           </td> <td align="center">   26.98154      </td> <td align="center">   NO3-      </td> <td align="center">   NO3          </td> <td align="center">   62.0049       </td> </tr>
+<tr><td align="center">   Am+3       </td> <td align="center">   Am           </td> <td align="center">   243           </td> <td align="center">   Na+       </td> <td align="center">   Na           </td> <td align="center">   22.98977      </td> </tr>
+<tr><td align="center">   Ar         </td> <td align="center">   Ar(aq)       </td> <td align="center">   39.948        </td> <td align="center">   NbO3-     </td> <td align="center">   NbO3         </td> <td align="center">   140.9046      </td> </tr>
+<tr><td align="center">   Au+        </td> <td align="center">   Au           </td> <td align="center">   196.9665      </td> <td align="center">   Nd+3      </td> <td align="center">   Nd           </td> <td align="center">   144.24        </td> </tr>
+<tr><td align="center">   BO2-       </td> <td align="center">   BO2          </td> <td align="center">   42.8088       </td> <td align="center">   Ne        </td> <td align="center">   Ne(AQ)       </td> <td align="center">   20.179        </td> </tr>
+<tr><td align="center">   Ba+2       </td> <td align="center">   Ba           </td> <td align="center">   137.33        </td> <td align="center">   Ni+2      </td> <td align="center">   Ni           </td> <td align="center">   58.7          </td> </tr>
+<tr><td align="center">   Be+2       </td> <td align="center">   Be           </td> <td align="center">   9.01218       </td> <td align="center">   Pb+2      </td> <td align="center">   Pb           </td> <td align="center">   207.2         </td> </tr>
+<tr><td align="center">   Bi+3       </td> <td align="center">   Bi           </td> <td align="center">   208.9804      </td> <td align="center">   Pd+2      </td> <td align="center">   Pd           </td> <td align="center">   106.4         </td> </tr>
+<tr><td align="center">   Br-        </td> <td align="center">   Br           </td> <td align="center">   79.904        </td> <td align="center">   Pm+3      </td> <td align="center">   Pm           </td> <td align="center">   145           </td> </tr>
+<tr><td align="center">   Ca+2       </td> <td align="center">   Ca           </td> <td align="center">   40.08         </td> <td align="center">   Pr+3      </td> <td align="center">   Pr           </td> <td align="center">   140.90765     </td> </tr>
+<tr><td align="center">   Cd+2       </td> <td align="center">   Cd           </td> <td align="center">   112.41        </td> <td align="center">   Pt+2      </td> <td align="center">   Pt           </td> <td align="center">   195.078       </td> </tr>
+<tr><td align="center">   Ce+3       </td> <td align="center">   Ce           </td> <td align="center">   140.116       </td> <td align="center">   Ra+2      </td> <td align="center">   Ra           </td> <td align="center">   222           </td> </tr>
+<tr><td align="center">   Cl-        </td> <td align="center">   Cl           </td> <td align="center">   35.453        </td> <td align="center">   Rb+       </td> <td align="center">   Rb           </td> <td align="center">   85.4678       </td> </tr>
+<tr><td align="center">   Co+3       </td> <td align="center">   Co           </td> <td align="center">   58.9332       </td> <td align="center">   Rh+3      </td> <td align="center">   Rh           </td> <td align="center">   102.9055      </td> </tr>
+<tr><td align="center">   Cr+3       </td> <td align="center">   Cr           </td> <td align="center">   51.9961       </td> <td align="center">   Rn        </td> <td align="center">   Rn(AQ)       </td> <td align="center">   222           </td> </tr>
+<tr><td align="center">   Cs+        </td> <td align="center">   Cs           </td> <td align="center">   132.9054      </td> <td align="center">   RuO4-2    </td> <td align="center">   RuO4         </td> <td align="center">   165.1676      </td> </tr>
+<tr><td align="center">   Cu+        </td> <td align="center">   Cu           </td> <td align="center">   63.546        </td> <td align="center">   SO4-2     </td> <td align="center">   SO4          </td> <td align="center">   96.0626       </td> </tr>
+<tr><td align="center">   Dy+3       </td> <td align="center">   Dy           </td> <td align="center">   162.5         </td> <td align="center">   Sc+3      </td> <td align="center">   Sc           </td> <td align="center">   44.9559       </td> </tr>
+<tr><td align="center">   Er+3       </td> <td align="center">   Er           </td> <td align="center">   167.259       </td> <td align="center">   SeO4-2    </td> <td align="center">   SeO4         </td> <td align="center">   142.9576      </td> </tr>
+<tr><td align="center">   Eu+3       </td> <td align="center">   Eu           </td> <td align="center">   151.964       </td> <td align="center">   SiO2      </td> <td align="center">   Si           </td> <td align="center">   56.171        </td> </tr>
+<tr><td align="center">   F-         </td> <td align="center">   F            </td> <td align="center">   18.998403     </td> <td align="center">   Sm+3      </td> <td align="center">   Sm           </td> <td align="center">   150.36        </td> </tr>
+<tr><td align="center">   Fe+3       </td> <td align="center">   Fe           </td> <td align="center">   55.847        </td> <td align="center">   Sn+2      </td> <td align="center">   Sn           </td> <td align="center">   118.69        </td> </tr>
+<tr><td align="center">   Fr+        </td> <td align="center">   Fr           </td> <td align="center">   223           </td> <td align="center">   Sr+2      </td> <td align="center">   Sr           </td> <td align="center">   87.62         </td> </tr>
+<tr><td align="center">   Ga+3       </td> <td align="center">   Ga           </td> <td align="center">   69.735        </td> <td align="center">   Tb+3      </td> <td align="center">   Tb           </td> <td align="center">   158.92534     </td> </tr>
+<tr><td align="center">   GdO+       </td> <td align="center">   GdO          </td> <td align="center">   173.2494      </td> <td align="center">   TcO4-     </td> <td align="center">   TcO4         </td> <td align="center">   162.9038      </td> </tr>
+<tr><td align="center">   H+         </td> <td align="center">   H            </td> <td align="center">   1.0079        </td> <td align="center">   Tl+3      </td> <td align="center">   Tl           </td> <td align="center">   204.37        </td> </tr>
+<tr><td align="center">   H2O        </td> <td align="center">   H2O          </td> <td align="center">   18.0152       </td> <td align="center">   Tm+3      </td> <td align="center">   Tm           </td> <td align="center">   168.93421     </td> </tr>
+<tr><td align="center">   HAsO4-2    </td> <td align="center">   HAsO4        </td> <td align="center">   139.92714     </td> <td align="center">   U+3       </td> <td align="center">   U            </td> <td align="center">   238.029       </td> </tr>
+<tr><td align="center">   HCO3-      </td> <td align="center">   HCO3         </td> <td align="center">   61.0171       </td> <td align="center">   VO4-3     </td> <td align="center">   VO4          </td> <td align="center">   114.9391      </td> </tr>
+<tr><td align="center">   HPO4-2     </td> <td align="center">   HPO4         </td> <td align="center">   95.979301     </td> <td align="center">   WO4-2     </td> <td align="center">   WO4          </td> <td align="center">   247.8476      </td> </tr>
+<tr><td align="center">   He         </td> <td align="center">   He(AQ)       </td> <td align="center">   4.0026        </td> <td align="center">   Xe        </td> <td align="center">   Xe(aq)       </td> <td align="center">   131.3         </td> </tr>
+<tr><td align="center">   Hf+4       </td> <td align="center">   Hf           </td> <td align="center">   178.49        </td> <td align="center">   Y+3       </td> <td align="center">   Y            </td> <td align="center">   88.9059       </td> </tr>
+<tr><td align="center">   Hg+2       </td> <td align="center">   Hg           </td> <td align="center">   200.59        </td> <td align="center">   Yb+3      </td> <td align="center">   Yb           </td> <td align="center">   173.04        </td> </tr>
+<tr><td align="center">   HoO+       </td> <td align="center">   HoO          </td> <td align="center">   180.92972     </td> <td align="center">   Zn+2      </td> <td align="center">   Zn           </td> <td align="center">   65.38         </td> </tr>
+<tr><td align="center">   I-         </td> <td align="center">   I            </td> <td align="center">   126.9045      </td> <td align="center">   Zr+4      </td> <td align="center">   Zr           </td> <td align="center">   91.22         </td> </tr>
+<tr><td align="center">   In+3       </td> <td align="center">   In           </td> <td align="center">   114.82        </td> <td align="center">   e-        </td> <td align="center">   e-           </td> <td align="center">   0             </td> </tr>
+<tr><td align="center">   K+         </td> <td align="center">   K            </td> <td align="center">   39.0983       </td> <td align="center">   X-        </td> <td align="center">   X            </td> <td align="center">   0             </td> </tr>
+<tr><td align="center">   Kr         </td> <td align="center">   Kr(AQ)       </td> <td align="center">   83.8          </td> <td align="center">   GCO3-     </td> <td align="center">   GCO3         </td> <td align="center">   0             </td> </tr>
+<tr><td align="center">   La+3       </td> <td align="center">   La           </td> <td align="center">   138.9055      </td> <td align="center">   GCa+      </td> <td align="center">   GCa          </td> <td align="center">   0             </td> </tr>
+<tr><td align="center">   Li+        </td> <td align="center">   Li           </td> <td align="center">   6.941         </td> <td align="center">   E         </td> <td align="center">   E            </td> <td align="center">   0             </td> </tr>
+<tr><td align="center">   Lu+3       </td> <td align="center">   Lu           </td> <td align="center">   174.967       </td> <td align="center">   GSiOH     </td> <td align="center">   GSiOH        </td> <td align="center">   0             </td> </tr>
+<tr><td align="center">   Mg+2       </td> <td align="center">   Mg           </td> <td align="center">   24.305        </td> <td align="center">   HSd-      </td> <td align="center">   HSd-         </td> <td align="center">   33.0729       </td> </tr>
+<tr><td align="center">   Mn+2       </td> <td align="center">   Mn           </td> <td align="center">   54.938        </td> <td align="center">   Hdg       </td> <td align="center">   Hdg          </td> <td align="center">   2.0158        </td> </tr>
+<tr><td align="center">              </td> <td align="center">                </td> <td align="center">                 </td> <td align="center">   Ndg       </td> <td align="center">   Ndg          </td> <td align="center">   28.0134       </td> </tr>
+</tbody>
+    </table>
+  </div> <!-- col-xs-6 -->
+</div> <!-- cell row -->
+
+<p>
+<!-- navigation buttons at the bottom of the page -->
+<ul class="pager">
+</ul>
+<!-- ------------------- end of main content --------------- -->
+</div>  <!-- end container -->
+<!-- include javascript, jQuery *first* -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+<!-- Bootstrap footer
+<footer>
+<a href="https://..."><img width="250" align=right src="https://..."></a>
+</footer>
+-->
+</body>
+</html>
+

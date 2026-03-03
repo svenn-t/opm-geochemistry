@@ -1,0 +1,189 @@
+----------
+RUNSPEC
+----------
+
+DIMENS
+    40 1 1 /
+
+WATER
+
+METRIC
+
+START
+    01 JAN 2025 /
+
+EQLDIMS
+/
+
+TABDIMS
+/
+
+WELLDIMS
+    2 2 1 2/
+
+GEOCHEM
+    1* 1e-7 1e-8 CHARGE /
+
+UNIFIN
+UNIFOUT
+
+----------
+GRID
+----------
+
+INIT
+
+DX
+    40*0.002 /
+
+DY
+    40*1.0 /
+
+DZ
+    40*1.0 /
+
+TOPS
+    40*100.0 /
+
+PORO
+    40*0.001 /
+
+PERMX
+    40*1000.0 /
+
+COPY
+    PERMX PERMY /
+    PERMX PERMZ /
+/
+
+----------
+PROPS
+----------
+
+DENSITY
+    860.04 1033.0 0.853 /
+
+PVTW
+    10 1.0 4E-5 0.5 /
+
+ROCK
+    277.0 4.22425e-05 /
+
+SPECIES
+    CA CL K NO3 NA H /
+
+IONEX
+    X /
+
+----------
+SOLUTION
+----------
+
+EQUIL
+    100.0 10.0 50.0 0 50.0 0 /
+
+RTEMP
+    25.0 /
+
+SBLKK
+    40*0.2e-3 /
+SBLKNO3
+    40*1.2e-3 /
+SBLKNA
+    40*1.0e-3 /
+SBLKH
+    40*1.0 /
+SBLKCA
+    40*0.0 /
+SBLKCL
+    40*0.0 /
+
+IBLKX
+    40*1.1e-3 /
+
+RPTRST
+    BASIC=2 /
+
+----------
+SUMMARY
+----------
+
+FPR
+
+WBHP
+/
+WWIR
+INJ /
+WWPR
+PROD /
+
+WTIRCA
+INJ /
+WTIRCL
+INJ /
+
+WTICCA
+INJ /
+WTICCL
+INJ /
+
+WTPRK
+PROD /
+WTPRNO3
+PROD /
+WTPRNA
+PROD /
+WTPRH
+PROD /
+WTPRCA
+PROD /
+WTPRCL
+PROD /
+
+WTPCK
+PROD /
+WTPCNO3
+PROD /
+WTPCNA
+PROD /
+WTPCH
+PROD /
+WTPCCA
+PROD /
+WTPCCL
+PROD /
+
+
+----------
+SCHEDULE
+----------
+
+RPTRST
+    BASIC=2 FLORES FLOWS /
+
+WELSPECS
+    INJ  FIELD 1  1  1* WAT /
+    PROD FIELD 40 1 1* WAT /
+/
+
+COMPDAT
+    INJ  1  1  1 1 OPEN 2* 0.2 /
+    PROD 40 1  1 1 OPEN 2* 0.2 /
+/
+
+WCONINJE
+    INJ WAT OPEN RATE 2.4e-4 1* 100.0 /
+/
+
+WCONPROD
+    PROD OPEN BHP 1* 1* 3* 10.0 /
+/
+
+WSPECIES
+    INJ CA 0.6e-3 /
+    INJ CL 1.2e-3 /
+/
+
+TSTEP
+    20*0.05 /
+

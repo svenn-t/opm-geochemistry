@@ -1,0 +1,454 @@
+<!--
+File automatically generated using DocOnce (https://github.com/doconce/doconce/):
+doconce format html main_rate.do.txt --html_style=bootswatch_readable --html_output=rate-readable --html_code_style=inherit
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Core flooding and the `RATE` and `INTERPOLATE` keyword">
+<title>Core flooding and the `RATE` and `INTERPOLATE` keyword</title>
+<!-- Bootstrap style: bootswatch_readable -->
+<!-- doconce format html main_rate.do.txt --html_style=bootswatch_readable --html_output=rate-readable --html_code_style=inherit -->
+<link href="https://netdna.bootstrapcdn.com/bootswatch/3.1.1/readable/bootstrap.min.css" rel="stylesheet">
+<!-- not necessary
+<link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+-->
+<style type="text/css">
+/* Let inline verbatim have the same color as the surroundings */
+code { color: inherit; background-color: transparent; }
+/* Add scrollbar to dropdown menus in bootstrap navigation bar */
+.dropdown-menu {
+   height: auto;
+   max-height: 400px;
+   overflow-x: hidden;
+}
+/* Adds an invisible element before each target to offset for the navigation
+   bar */
+.anchor::before {
+  content:"";
+  display:block;
+  height:64px;      /* fixed header height for style bootswatch_readable */
+  margin:-64px 0 0; /* negative fixed header height */
+}
+</style>
+</head>
+
+<!-- tocinfo
+{'highest level': 1,
+ 'sections': [('Table of contents',
+               1,
+               'table_of_contents',
+               'table_of_contents'),
+              ('Mineral kinetics',
+               1,
+               'sec:dissolution_precipitation',
+               'sec:dissolution_precipitation'),
+              ('Rate input', 2, None, 'rate-input'),
+              ('Full input file', 2, None, 'full-input-file'),
+              ('Running code', 2, None, 'running-code'),
+              ('`INTERPOLATE` keyword', 1, None, 'interpolate-keyword'),
+              ('Bibliography', 1, None, 'bibliography')]}
+end of tocinfo -->
+
+<body>
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+     equationNumbers: {  autoNumber: "none"  },
+     extensions: ["AMSmath.js", "AMSsymbols.js", "autobold.js", "color.js"]
+  }
+});
+</script>
+<script type="text/javascript" async
+ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+<!-- newcommands_keep.tex -->
+$$
+\newcommand{\logn}{\log_{10}}
+\newcommand{\HCOT}{\mathrm{HCO_3^-}}
+\newcommand{\Ca}{\mathrm{Ca^{2+}}}
+\newcommand{\Mg}{\mathrm{Mg^{2+}}}
+\newcommand{\SO}{\mathrm{SO_{4}^{2-}}}
+\newcommand{\HP}{\mathrm{H^{+}}}
+\newcommand{\cheq}{\rightleftharpoons}
+$$
+
+
+
+<!-- Bootstrap navigation bar -->
+<div class="navbar navbar-default navbar-fixed-top">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="rate-readable.html">Core flooding and the `RATE` and `INTERPOLATE` keyword</a>
+  </div>
+  <div class="navbar-collapse collapse navbar-responsive-collapse">
+    <ul class="nav navbar-nav navbar-right">
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Contents <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+     <!-- navigation toc: --> <li><a href="#table_of_contents" style="font-size: 80%;"><b>Table of contents</b></a></li>
+     <!-- navigation toc: --> <li><a href="#sec:dissolution_precipitation" style="font-size: 80%;"><b>Mineral kinetics</b></a></li>
+     <!-- navigation toc: --> <li><a href="#rate-input" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Rate input</a></li>
+     <!-- navigation toc: --> <li><a href="#full-input-file" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Full input file</a></li>
+     <!-- navigation toc: --> <li><a href="#running-code" style="font-size: 80%;">&nbsp;&nbsp;&nbsp;Running code</a></li>
+     <!-- navigation toc: --> <li><a href="#interpolate-keyword" style="font-size: 80%;"><b><code>INTERPOLATE</code> keyword</b></a></li>
+     <!-- navigation toc: --> <li><a href="#bibliography" style="font-size: 80%;"><b>Bibliography</b></a></li>
+
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+</div> <!-- end of navigation bar -->
+<div class="container">
+<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p> <!-- add vertical space -->
+<a name="part0000"></a>
+<!-- ------------------- main content ---------------------- -->
+<div class="jumbotron">
+<center>
+<h1>Core flooding and the <code>RATE</code> and <code>INTERPOLATE</code> keyword</h1>
+</center>  <!-- document title -->
+
+
+</div> <!-- end jumbotron -->
+<h1 id="table_of_contents">Table of contents</h1>
+
+<div class='toc'>
+<p><a href="#sec:dissolution_precipitation"> Mineral kinetics </a></p>
+<p><span class="tab"> <a href="#rate-input"> Rate input  </a></p>
+<p><span class="tab"> <a href="#full-input-file"> Full input file </a></p>
+<p><span class="tab"> <a href="#running-code"> Running code </a></p>
+<p><a href="#interpolate-keyword"> <code>INTERPOLATE</code> keyword  </a></p>
+<p><a href="#bibliography"> Bibliography </a></p>
+</div>
+<br>
+
+<p>Here we will explain the <code>RATE</code> keyword and <code>INTERPOLATE</code> keyword, the latter keyword is used to speed up the chemical calculations and are explained at the end.</p>
+
+<p>To illustrate the <code>RATE</code> keyword we consider a chalk core flooding of a seawater like brine (seawater, but low on NaCl). The data are from <a href="#madland2011chemical">[1]</a>, and the chemical rate constants are close to the values in <a href="#hiorth2013precipitation">[2]</a>. The chemical reactions that takes place in the core are as follows</p>
+$$
+\begin{align}
+\text{calcite} &\cheq\Ca + \HCOT -\HP,
+\tag{1}\\
+\text{magnecite} &\cheq\Mg + \HCOT -\HP,
+\tag{2}\\
+\text{anhydrite}&\cheq\Ca + \SO.
+\tag{3}\\
+\tag{4}
+\end{align}
+$$
+
+<p>The core flooding was done at a temperature of \( 130^\circ \) C and a pressure of 8 bars, the pore volume was 38.31 ml and a flooding rate of 1 PV/day or 0.0266 ml/hour. If we run a simulation that assumes that the core is in equilibrium with the minerals mentioned above, i.e. </p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">equilibrium_phases
+calcite 1 0
+anhydrite 0 0
+magnesite 0 0
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>where we assume that calcite (chalk) is the only mineral initially, but with a possibility of forming magnesite or anhydrite, we get the result in figure <a href="#fig:rate:swii">1</a>.</p>
+
+<center> <!-- figure label: --> <div id="fig:rate:swii"></div> <!-- FIGURE -->
+<hr class="figure">
+<center>
+<p class="caption">Figure 1: Comparison between GeoChemX, and data <a href="#madland2011chemical">[1]</a>. Dotted lines are simulation whereas dots are experimental points  <!-- caption label: fig:rate:swii --></p>
+</center>
+<p><img src="fig-rate/eq_swII.png" width="800" align="bottom"></p>
+</center>
+
+<p>We clearly see that there is a significant discrepancy, the calcium concentration is reasonable, but the sulphate and the magnesium concentrations are off. The reason is that there chemical reactions are time dependent. Furthermore there is also some transient behavior which is due to the fact that the reactive surface are changes <a href="#nermoen2015porosity">[3]</a> <a href="#pedersen2016dissolution">[4]</a>.
+<h1 id="sec:dissolution_precipitation" class="anchor">Mineral kinetics</h1>
+</p>
+
+<p>Rate-controlled mineral precipitation / dissolution is modelled with the
+rate equation <a href="#palandri2004compilation">[5]</a>
+</p>
+$$
+\begin{equation}
+\frac{dM_i}{dt} = \frac{A}{V}J_{\text{M}}^i=\frac{A}{V}
+\text{sgn}(1-\Omega_i)\left(r_1^i+r_2^i a_H^{n_\text{acid}}\right)
+\left|1-\Omega_i^m\right|^n\,,
+\tag{5}
+\end{equation}
+$$
+
+<p>where \( M_i \) is the concentration of mineral \( i \) (mol/L), \( A_i \) is the
+surface area of mineral \( i \) (m$^2$), \( V \) is the volume of fluid (\( L \)),
+\( r_{1,2} \) are rate constants (mol/m$^2$/s), \( m \), \( n \), and \( n_{\text{acid}} \) are
+exponents indicating the order of reaction,
+and \( \Omega_i \) is the \emph{saturation state} of mineral \( i \).
+Saturation state is related to \emph{saturation index}, \( SI \), via:
+</p>
+$$
+\begin{align}
+\Omega &\equiv = \frac{IAP}{K} \,. 
+\tag{6}\\
+SI &\equiv \logn{\Omega} \,.
+\tag{7}
+\end{align}
+$$
+
+<p>The change in the total basis species concentration due to dissolution
+and precipitation can be written:
+</p>
+$$
+\begin{align}
+\frac{dc_i}{dt} &= S_g J_R^i 
+\tag{8}\\
+J_R^i &= \sum_j\nu_{ij}\text{sgn}(1-\Omega_j)\left(k_1^i+k_2^i
+a_H^{n_\text{acid}}\right)\left|1-\Omega_j^m\right|^n \,,
+\tag{9}
+\end{align}
+$$
+
+<p>where the sum goes over all the minerals present, \( \nu \) is the
+stoichiometric matrix, and \( S_g\equiv{A/V} \) is the specific surface area (\( \text{m}^2/\text{L} \)). 
+The temperature-dependence is captured by an Arrhenius-type relation:
+</p>
+$$
+\begin{equation}
+k_{j}(T)=k_{j}(T_\text{ref})\cdot\exp{\left[-\frac{\epsilon_{a,j}^i}{R}
+\cdot\left(\frac{1}{T}-\frac{1}{T_\text{ref}}\right)
+\right]}\,.
+\tag{10}
+\end{equation}
+$$
+
+<p>Here we have dropped the superscript indicating the mineral index.
+These two activation energies, \( \epsilon_{a,1}^i \), and \( \epsilon_{a,2}^i \) (J/mol),
+must be input by the user (default: zero).
+</p>
+<h2 id="rate-input" class="anchor">Rate input  </h2>
+<p>The <code>rate</code> input has the following syntax, where all the parameters are described above </p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">rate
+# rate = (k_1*exp(-Ea/Rg)(1/T-1/298.15)+k_2*a_H*exp(-Ea/Rg)(1/T-1/298.15)*(1-SI^n)^m
+#mineral   wt-fraction	Sg   log_af   Ea_1    k_1       Ea_2	k_2	n	m
+calcite 	1	5220	0     37.8e3  1.54e-6	35.4e3	0.52	1	1
+magnesite	0	1	0     60e3    5.48e-11	0.0	0.0	1	1
+anhydrite	0	1	0	0     5e-8	0.0	0.0	1	1
+/ end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>The values for calicte are the same as the one published in <a href="#palandri2004compilation">[5]</a>, for magnesite and anhydrite the values are close to the ones used in <a href="#hiorth2013precipitation">[2]</a>. Anhydrite precipitation values are just fit to data, and therefore the activation energy is put to zero, i.e. the temperature dependence is neglected. A limitation of the current rate equation is that the reactive surface area is probably changing as a function of time, which would greatly impact the rate. </p>
+
+<p>Running the input file below we get the results shown in figure <a href="#fig:rate:swii_rate">2</a>. The simulation is now closer to the observed values, but we still do not capture the full time dependency, which is most likely due to time dependency of the reactive surface area <a href="#nermoen2015porosity">[3]</a> <a href="#pedersen2016dissolution">[4]</a>. </p>
+
+<center> <!-- figure label: --> <div id="fig:rate:swii_rate"></div> <!-- FIGURE -->
+<hr class="figure">
+<center>
+<p class="caption">Figure 2: Comparison between GeoChemX, and data <a href="#madland2011chemical">[1]</a>. Dotted lines are simulation assuming equilibrium, and solid lines are assuming rates.  <!-- caption label: fig:rate:swii_rate --></p>
+</center>
+<p><img src="fig-rate/rate_swII.png" width="800" align="bottom"></p>
+</center>
+
+<h2 id="full-input-file" class="anchor">Full input file </h2>
+
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">Tf  200
+Temp 130
+Pres 800000.0
+Imp 0
+VolRate 0.0266
+Volume 38.31
+NoBlocks 20
+Flush 0.5
+debug 0
+#interpolate 10000
+WriteNetCDF 1
+porosity 0.5
+
+chemtol
+1e-7 1e-8
+/end
+
+geochem
+solution 0 
+pH 7 charge
+Ca 1e-8
+HCO3 1e-8
+/end
+
+iexchange
+X 0.09
+/ end
+
+# uncomment and remove rate keyword to run pure
+# equilibrium calculations
+#equilibrium_phases
+#calcite 1 0
+#anhydrite 0 0
+#magnesite 0 0
+#/end
+
+rate
+# rate = (k_1*exp(-Ea/Rg)(1/T-1/298.15)+k_2*a_H*exp(-Ea/Rg)(1/T-1/298.15)*(1-SI^n)^m
+#mineral   wt-fraction	Sg   log_af   Ea_1    k_1       Ea_2	k_2	n	m
+calcite 	1	5220	0     37.8e3  1.54e-6	35.4e3	0.52	1	1
+magnesite	0	1	0     60e3    5.48e-11	0.0	0.0	1	1
+anhydrite	0	1	0	0     5e-8	0.0	0.0	1	1
+/ end
+
+solution 1
+--Injected brine
+pH 7 charge
+HCO3	0.002
+Cl	0.1251
+SO4	0.024
+Mg	0.0445
+Ca	0.013
+Na	0.05
+K	0.01
+/end
+
+/end
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h2 id="running-code" class="anchor">Running code </h2>
+<p>The file is run by using <code>TRANSPORT</code> keyword on the command line</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">Terminal&gt;GeoChemX TRANSPORT &lt;input_file&gt;
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<h1 id="interpolate-keyword" class="anchor"><code>INTERPOLATE</code> keyword  </h1>
+<p>The mathematics of the method is described in Appendix 2 of <a href="#feldmann2024iorsim">[6]</a>. In simple terms <code>GeoChemX</code> stores the result of the chemical concentrations if the <code>INTERPOLATE</code> flag is turned on. The number behind the <code>INTERPOLATE</code> keyword determines the binning of the solution, and then the chemical solver picks the <em>closest</em> solution. The assumption is that if the mineral combination is known in the block, along with the temperature, time step, and total concentration of basis species the solution is known and we can just look it up. Temperature and time step is stored on a linear scale, whereas chemical concentrations are stored as log values. Hence, if we enter the combination</p>
+
+<!-- code=text (!bc sys) typeset with pygments style "default" -->
+<div class="cell border-box-sizing code_cell rendered">
+  <div class="input">
+    <div class="inner_cell">
+      <div class="input_area">
+        <div class="highlight" style="background: #f8f8f8">
+  <pre style="line-height: 125%;">INTERPOLATE 10
+</pre>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="output_wrapper">
+    <div class="output">
+      <div class="output_area">
+        <div class="output_subarea output_stream output_stdout output_text">          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>Temperatures and time steps (in seconds) that differs by 0.1 are considered equal, and concentrations that differs by 0.1 on <em>log scale</em>, i.e. a solution pH of 7.1 would be equal to 7.0 and so on for the rest of the chemical species (including surface species). By increasing to <code>INTERPOLATE 100</code> we store more solutions. Another important point to mention is that we do not store the absolute values of the calculated solution, but the differences. This is to make sure that the solution always is charge balanced. The challenge with this approach is that when surface complexes or ion exchange are active, we need a number of around 1000 to get accurate solutions.  </p>
+
+<p>A simple test on a laptop shows that for this case, using <code>INTERPOLATE 10000</code> speeds up the calculation by a factor of 3. For bigger simulations the speed up will be significant bigger. In a reservoir simulation with millions of blocks, there will only be changes in a subset of blocks that needs to be calculated.</p>
+<h1 id="bibliography" class="anchor">Bibliography </h1>
+
+<!-- begin bibliography -->
+<ol>
+ <li> <div id="madland2011chemical"></div> <b>M. Madland, A. Hiorth, E. Omdal, M. Megawati, T. Hildebrand-Habel, R. Korsnes, S. Evje and L. Cathles</b>.  Chemical Alterations Induced by Rock-Fluid Interactions When Injecting Brines in High Porosity Chalks, <em>Transport in porous media</em>, 87(3), pp. 679-702, 2011.</li>
+ <li> <div id="hiorth2013precipitation"></div> <b>A. Hiorth, E. Jettestuen, L. Cathles and M. Madland</b>.  Precipitation, Dissolution, and Ion Exchange Processes Coupled With a Lattice Boltzmann Advection Diffusion Solver, <em>Geochimica et Cosmochimica Acta</em>, 104, pp. 99-110, 2013.</li>
+ <li> <div id="nermoen2015porosity"></div> <b>A. Nermoen, R. I. Korsnes, A. Hiorth and M. V. Madland</b>.  Porosity and Permeability Development in Compacting Chalks During Flooding of Nonequilibrium Brines: Insights From Long-Term Experiment, <em>Journal of Geophysical Research: Solid Earth</em>, 120(5), pp. 2935-2960, 2015.</li>
+ <li> <div id="pedersen2016dissolution"></div> <b>J. Pedersen, E. Jettestuen, M. V. Madland, T. Hildebrand-Habel, R. I. Korsnes, J. L. Vinningland and A. Hiorth</b>.  A Dissolution Model That Accounts for Coverage of Mineral Surfaces by Precipitation in Core Floods, <em>Advances in Water Resources</em>, 87, pp. 68-79, 2016.</li>
+ <li> <div id="palandri2004compilation"></div> <b>J. L. Palandri and Y. K. Kharaka</b>.  A Compilation of Rate Parameters of Water-Mineral Interaction Kinetics for Application to Geochemical Modeling, <em>Geological Survey Menlo Park CA</em>, 2004.</li>
+ <li> <div id="feldmann2024iorsim"></div> <b>F. Feldmann, O. Nodland, J. Sagen, B. Antonsen, T. Sira, J. L. Vinningland, R. Moe and A. Hiorth</b>.  IORSim: a Mathematical Workflow for Field-Scale Geochemistry Simulations in Porous Media, <em>Transport in Porous Media</em>, 151(9), pp. 1781-1809, 2024.</li>
+</ol>
+<!-- end bibliography -->
+<p>
+<!-- navigation buttons at the bottom of the page -->
+<ul class="pager">
+</ul>
+<!-- ------------------- end of main content --------------- -->
+</div>  <!-- end container -->
+<!-- include javascript, jQuery *first* -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+<!-- Bootstrap footer
+<footer>
+<a href="https://..."><img width="250" align=right src="https://..."></a>
+</footer>
+-->
+</body>
+</html>
+

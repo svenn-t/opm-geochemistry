@@ -1,0 +1,99 @@
+/*
+  Copyright 2025, Equinor ASA
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#include "config.h"
+
+#include <opm/models/blackoil/blackoilonephaseindices.hh>
+#include <opm/models/blackoil/blackoillocalresidualtpfa.hh>
+#include <opm/models/discretization/common/tpfalinearizer.hh>
+
+#include <opm/simulators/flow/FlowProblem.hpp>
+#include <opm/simulators/flow/FlowProblemGeochemistry.hpp>
+#include <opm/simulators/flow/Main.hpp>
+
+namespace Opm::Properties {
+
+    namespace TTag {
+        struct FlowWaterOnlyProblemGeochem {
+            using InheritsFrom = std::tuple<FlowProblem>;
+        };
+    }  // namespace TTag
+
+    template<class TypeTag>
+    struct Linearizer<TypeTag, TTag::FlowWaterOnlyProblemGeochem>
+    { using type = TpfaLinearizer<TypeTag>; };
+
+    template<class TypeTag>
+    struct LocalResidual<TypeTag, TTag::FlowWaterOnlyProblemGeochem>
+    { using type = BlackOilLocalResidualTPFA<TypeTag>; };
+
+    template<class TypeTag>
+    struct EnableDiffusion<TypeTag, TTag::FlowWaterOnlyProblemGeochem>
+    { static constexpr bool value = false; };
+
+    template<class TypeTag>
+    struct EnableGeochemistry<TypeTag, TTag::FlowWaterOnlyProblemGeochem>
+    { static constexpr bool value = true; };
+
+    template<class TypeTag>
+    struct EnergyModuleType<TypeTag, TTag::FlowWaterOnlyProblemGeochem>
+    { static constexpr EnergyModules value = EnergyModules::ConstantTemperature; };
+
+    // Set the geochemistry problem
+    template <class TypeTag>
+    struct Problem<TypeTag, TTag::FlowWaterOnlyProblemGeochem>
+    {
+        using type = FlowProblemGeochemistry<TypeTag>;
+    };
+
+    //! The indices required by the model
+    template<class TypeTag>
+    struct Indices<TypeTag, TTag::FlowWaterOnlyProblemGeochem>
+    {
+    private:
+        // it is unfortunately not possible to simply use 'TypeTag' here because this leads
+        // to cyclic definitions of some properties. if this happens the compiler error
+        // messages unfortunately are *really* confusing and not really helpful.
+        using BaseTypeTag = TTag::FlowProblem;
+        using FluidSystem = GetPropType<BaseTypeTag, Properties::FluidSystem>;
+        static constexpr EnergyModules energyModuleType = getPropValue<TypeTag, Properties::EnergyModuleType>();
+        static constexpr int numEnergyVars = energyModuleType == EnergyModules::FullyImplicitThermal;
+
+    public:
+        using type = BlackOilOnePhaseIndices<getPropValue<TypeTag, Properties::EnableSolvent>(),
+                                             getPropValue<TypeTag, Properties::EnableExtbo>(),
+                                             getPropValue<TypeTag, Properties::EnablePolymer>(),
+                                             numEnergyVars,
+                                             getPropValue<TypeTag, Properties::EnableFoam>(),
+                                             getPropValue<TypeTag, Properties::EnableBrine>(),
+                                             /*PVOffset=*/0,
+                                             /*enabledCompIdx=*/FluidSystem::waterCompIdx,
+                                             getPropValue<TypeTag, Properties::EnableBioeffects>()>;
+    };
+
+}  // namespace Opm::Properties
+
+int main(int argc, char** argv)
+{
+    using TypeTag = Opm::Properties::TTag::FlowWaterOnlyProblemGeochem;
+    auto mainObject = std::make_unique<Opm::Main>(argc, argv);
+    auto ret = mainObject->runStatic<TypeTag>();
+    // Destruct mainObject as the destructor calls MPI_Finalize!
+    mainObject.reset();
+    return ret;
+}

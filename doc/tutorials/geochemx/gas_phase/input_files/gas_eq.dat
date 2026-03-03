@@ -1,0 +1,20 @@
+GEOCHEM
+Temp	350
+Pres	300e5
+debug	2
+SOLUTION
+pH	5 charge
+/end
+EQUILIBRIUM_PHASES
+dolomite 1 0
+quartz 1 0
+diopside 1 0
+/end
+
+GAS_PHASE
+volume_frac	1.33
+CO2,g 0
+H2O,g 0
+Ndg,g 10e5
+/end
+/end

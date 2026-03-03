@@ -1,0 +1,286 @@
+# Surface complexation - the `COMPLEX` keyword
+<!-- Table of contents: Run pandoc with --toc option -->
+
+## Background
+Surface reactions are implemented based on standard Poisson-Boltzmann / Gouy-Chapman
+theory; see [@stumm:92]. The following surface complex reactions are included in the database
+[@van1993surface;@Hiorth:10] for chalk  (see source file `ChemDatabaseHKF_surface.cpp`)
+$$
+\begin{aligned}
+\mathrm{>CaCO_{3}^{-}} &{\rightleftharpoons} \mathrm{>CaH_2O^{+}} + \mathrm{HCO_3^-} - \mathrm{H^{+}} - \mathrm{H_2O} \,, \\ 
+\mathrm{>CaOH^{0}} &{\rightleftharpoons} \mathrm{>CaH_2O^{+}} - \mathrm{H^{+}} \,, \\ 
+\mathrm{>CaHCO_3^{0}} &{\rightleftharpoons} \mathrm{>CaH_2O^{+}} + \mathrm{HCO_3^-} - \mathrm{H_2O} \,, \\ 
+\mathrm{>CaSO_4^{-}} &{\rightleftharpoons} \mathrm{>CaH_2O^{+}} + \mathrm{SO_{4}^{2-}} \,, \\ 
+\mathrm{>CO_{3}H^{0}} &{\rightleftharpoons}  \mathrm{>CO_3^{-}} + \mathrm{H^{+}} \,, \\ 
+\mathrm{>CO_3Ca^{+}} &{\rightleftharpoons} \mathrm{>CO_3^{-}}+  \mathrm{Ca^{2+}} \,, \\ 
+\mathrm{>CO_3Mg^{+}} &{\rightleftharpoons} \mathrm{>CO_3^{-}} + \mathrm{Mg^{2+}} \,.
+\end{aligned}
+$$
+
+The ">"-symbol is used to distinguish surface complexes from aqueous complexes;
+note that $\mathrm{>CaH_2O^{+}}$ and $\mathrm{>CO_3^{-}}$ are treated as basis species, while the rest are
+secondary species. All of the surface complex reactions conserve charge.
+For each reaction there is a corresponding law of mass action expression.
+Mathematically, the only difference compared to the usual dissociation
+reactions is the inclusion of a new term that contains the surface potential,
+to correct activities at the surface for electrostatic effects [@stumm:92].
+As an example, applying the law of mass action to the equation involving $\mathrm{>CaCO_{3}^{-}}$ above  yields:
+$$
+\begin{aligned}
+\mathrm{>CaCO_{3}^{-}}&{\rightleftharpoons}\,\mathrm{>CaH_2O^{+}} + \mathrm{HCO_3^-} -\mathrm{H^{+}}-\mathrm{H_2O},\nonumber\\ 
+K&=\frac{[\mathrm{>CaH_2O^{+}}]\,a_\mathrm{HCO_3^-}\,
+\exp\{F\,\psi/(R\,T)\}}{[\mathrm{>CaCO_{3}^{-}}]\,a_\mathrm{H^{+}}\,\exp\{-F\,\psi/(R\,T)\}}\,,\nonumber\\ 
+\log_{10} K&=\,\log_{10} [\mathrm{>CaH_2O^{+}}]\log_{10} a_\mathrm{HCO_3^-}-\log_{10} a_\mathrm{H^{+}} -\log_{10} [\mathrm{>CaCO_{3}^{-}}]\nonumber\\ 
+&+\,2\underbrace{\frac{F\psi_0}{\ln10\,R\,T}}_{\log_{10} E_0}\,.
+\end{aligned}
+$$
+The activity of water has been assumed to be unity. To account for electrostatic
+effects, the activity of an aqueous species that reacts with a surface complex
+is influenced by the surface potential via the Boltzmann factor,
+$$
+
+\exp\left(\frac{-Z_i F \psi_0}{RT}\right)\,,
+
+$$
+where $Z_i$ is the valence of the aqueous species, $F$ = 9.648456 $\cdot10^{4}$ C/mol is Faraday's
+constant, $R$ = 8.314 J/(K mol) is the ideal gas constant, $\psi_0$ (V) is the
+surface potential, and T is the absolute temperature.
+Thus, when the surface potential has a negative sign, positively charged ions will
+have a high activity close to the surface, while negatively charged ions will
+have a high activity close to the surface if the surface potential is positive.
+
+To accommodate the electrostatic effect into the governing equations of the
+geochemical model, we have introduced $E_0$ as a shorthand for the Boltzmann
+correction. This is not merely a notational convenience: by adding $E_0$ as
+added as a fictive basis species, along with the two new surface basis
+species $\mathrm{>CaH_2O^{+}}$  and $\mathrm{>CO_3^{-}}$, we can write the reaction in exactly the same
+mathematical form as chemical reactions in the aqueous phase [@appelo2005geochemistry].
+More generally, we let $E=E(x)$ denote the Boltzmann factor
+$$
+
+\exp\left(\frac{-Z_i F \psi(x)}{RT}\right)\,,
+
+$$
+that is, $E$ depends on the potential at distance $x$ from the surface.
+
+## Example: Equilibrium between a solution and carbonate surface site
+
+
+```
+geochem
+equilibrate 0
+solution 0
+--Solution to equilibrate
+pH 7 charge
+Na 0.48
+SO4 0.24
+/end
+
+complex
+method 1
+#specific surface area m^2/L pore volume
+s_area 1000.0 
+#Name sites/nm^2
+GCa 2
+GCO3 2
+/end
+
+/end
+```
+
+*Explanation of input file:*
+
+Note that the solution keyword is described in the [solution example](../../solution/markdown/main_solution.md). To model surface interactions with a charged surface of e.g. a carbonate, we need to invoke the `COMPLEX` keyword.
+`geochem .. /end`:
+  :    
+  Defines the geochemical input block
+`equilibrate`:
+  :    
+  equilibrate without changing the bulk solution (see also the [ion exchange example](../../iexchange/markdown/main_iexchange.md))
+`COMPLEX .. /end`:
+  :    
+  Defines an ion exchange calculation block.
+`method`:
+  :    
+  can take on three different values, described below
+  * 0: puts surface potential to zero
+  * 1: uses the trick described in [@nodland2024new], where one assumes that the solution does not contain ions with higher valence than 2. (Note that many other solvers assumes monovalent solutions)
+  * 2: uses the general formulation of the Grahame equation (see e.g. [@stumm:92])  
+
+`GCa`:
+  :    
+  name of the (positive) surface site
+`GCO3`:
+  :    
+  name of the (negative) surface site
+`2`:
+  :    
+  is the number of surface sites, for carbonate typical value is 2-5.
+
+When run, `GeoChemX` will:
+
+1. Create a solution at pH 7.
+2. Add the dissolved ions $\mathrm{Na^{+}}$, $\mathrm{SO_{4}^{2-}}$.
+3. Perform a charge-balance adjustment using $\mathrm{H^{+}}$.
+4. Add surface complexes 2 sites/nm.
+5. Compute how positive and negative ions, partition between:
+  * aqueous phase
+  * surface complex sites
+
+
+### Description of output
+In the file `<root_name>_solution.out` there are now the following output
+
+`pH = 10.6517`:
+  :    
+  Final equilibrium pH, the solution becomes alkaline due to surface reactions and sulfate interactions.
+`Sch [C/m2] = –0.0747877`:
+  :    
+  Total surface charge density. The surface is negatively charged, dominated by deprotonated surface carbonate groups.
+`Sch DL= 0`:
+  :    
+  Charge in the diffuse layer, zero here because it is not calculated (see next section).
+`psi [mV] = –43.5162`:
+  :    
+  Electrostatic potential. The surface develops a negative electric potential consistent with negative charge.
+`F = 96484.6 C/mol`:
+  :    
+  Faraday constant. Provided for completeness.
+`S = 1000 m2/L`:
+  :    
+  Surface area per liter
+`cbal = –1.01E-7 eq/L`:
+  :    
+  Charge balance error. Very small, i.e. good numerical charge balance.
+`n(1), n(-1), n(2), n(-2)`:
+  :    
+  Concentration of charge of ions with valence 1, -1, *larger than* 1, and *less than -1*, respectively. These are only calculated when surface model is used.
+`g(1), g(-1), g(2), g(-2)`:
+  :    
+  Ratio of surface excess to bulk concentration for valence 1, -1, *larger than* 1, and *less than -1* species, respectively. All zero as the diffusive layer is not calculated (see next section).
+
+At the end of the file one can see the equivalent fractions
+
+<table class="dotable" border="1">
+<thead>
+<tr><th align="center">﻿species</th> <th align="center">concentration</th> <th align="center">fractions</th> <th align="center">   logK  </th> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   GCO3-       </td> <td align="center">   3.32E-03         </td> <td align="center">   1.00E+00     </td> <td align="center">   0.00E+00     </td> </tr>
+<tr><td align="center">   GCa+        </td> <td align="center">   2.93E-03         </td> <td align="center">   8.83E-01     </td> <td align="center">   0.00E+00     </td> </tr>
+<tr><td align="center">   GCaSO4-     </td> <td align="center">   3.86E-04         </td> <td align="center">   1.16E-01     </td> <td align="center">   -2.11E+00    </td> </tr>
+<tr><td align="center">   GCaOH       </td> <td align="center">   3.55E-06         </td> <td align="center">   1.07E-03     </td> <td align="center">   1.28E+01     </td> </tr>
+<tr><td align="center">   GCO3H       </td> <td align="center">   3.06E-08         </td> <td align="center">   9.21E-06     </td> <td align="center">   -4.88E+00    </td> </tr>
+</tbody>
+</table>
+## Explicit diffusive layer calculations
+The theory behind the diffusive layer calculations are described in great detail in [@nodland2024new]. Explicit diffusive layer calculations might be important when flow is present. Contrary to ion exchange, the surface complexation reactions changes charge on the surface, therefore the solution can loose e.g. negative ions due surface complexation reactions. To conserve charge balance there must be an equal but opposite charge in the diffusive layers. The diffusive layer should not be transported along with the bulk solution, otherwise the solution will loose charge due to convection which is not physical. In `GeoChemX` the diffusive layer calculations are triggered by setting a size of the diffusive layer in nm
+
+
+```
+geochem
+debug 1
+equilibrate 0 
+solution 0
+--Solution to equilibrate
+pH 7 charge
+Na 0.48
+SO4 0.24
+/end
+
+complex
+method 1
+#specific surface area m^2/L pore volume, size of diffusion layer
+s_area 1000.0 10
+#Name sites/nm^2
+GCa 2
+GCO3 2
+/end
+/end
+
+```
+
+Here we have set 10 nm as the diffusive layer size, running `GeoChemX` the following table can be found in `<root_name>_solution.out`
+
+<table class="dotable" border="1">
+<thead>
+<tr><th align="center">﻿Species</th> <th align="center">ch</th> <th align="center"> c_tot  </th> <th align="center"> c_tot_aq</th> <th align="center">c_tot_SC</th> <th align="center">c_tot_IO</th> <th align="center">   c_dl  </th> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   H+          </td> <td align="center">   1     </td> <td align="center">   1.00E+00    </td> <td align="center">   -4.85E-06    </td> <td align="center">   4.80E-06    </td> <td align="center">   0.00E+00    </td> <td align="center">   2.16E-09     </td> </tr>
+<tr><td align="center">   H2O         </td> <td align="center">   0     </td> <td align="center">   0.00E+00    </td> <td align="center">   1.00E+00     </td> <td align="center">   2.25E-08    </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00     </td> </tr>
+<tr><td align="center">   Na+         </td> <td align="center">   1     </td> <td align="center">   4.80E-01    </td> <td align="center">   4.80E-01     </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00    </td> <td align="center">   4.49E-04     </td> </tr>
+<tr><td align="center">   SO4-2       </td> <td align="center">   -2    </td> <td align="center">   2.40E-01    </td> <td align="center">   2.40E-01     </td> <td align="center">   3.89E-04    </td> <td align="center">   0.00E+00    </td> <td align="center">   -1.62E-04    </td> </tr>
+<tr><td align="center">   GCO3-       </td> <td align="center">   0     </td> <td align="center">   3.32E-03    </td> <td align="center">   0.00E+00     </td> <td align="center">   3.32E-03    </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00     </td> </tr>
+<tr><td align="center">   GCa+        </td> <td align="center">   0     </td> <td align="center">   3.32E-03    </td> <td align="center">   0.00E+00     </td> <td align="center">   3.32E-03    </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00     </td> </tr>
+<tr><td align="center">   E           </td> <td align="center">   0     </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00     </td> <td align="center">   1.85E-01    </td> <td align="center">   0.00E+00    </td> <td align="center">   0.00E+00     </td> </tr>
+</tbody>
+</table>
+At the top of the file one can also find the charge on the surface -0.0745805 $C/m^2$ and in the diffusive layer as 0.0745805 $C/m^2$. As an extra check: By multiplying the concentrations in `c_tot_SC` with the corresponding charge, sum and multiply with Faradays constant divided by the surface area will give the surface charge (-0.0745805 C/m$^2$). Doing the same for the column in `c_tot_dl` will give the same charge, but with opposite sign.
+
+## Defining new surface species and reactions
+If the user wants to use different $\log$ K values, define new reactions or surface species, that can be done through the `include` keyword. Consider the same input file as before, but now we add `include "ions.txt"`
+
+
+```
+geochem
+include "ions.txt"
+equilibrate 0
+solution 0
+--Solution to equilibrate
+pH 7 charge
+Na 0.48
+SO4 0.24
+/end
+
+complex
+method 1
+#specific surface area m^2/L pore volume
+s_area 1000.0 
+#Name sites/nm^2
+GCa 2
+GCO3_new- 2
+/end
+
+/end
+```
+
+*Input file `ions.txt`:*
+
+```
+SURFACE_SPECIES
+#name 
+GCO3_new-  
+/end
+
+SECONDARY_SPECIES
+GCO3_newNa  = GCO3_new- + Na+ / ANA  -0.8 /
+GCaSO4- = GCa+ + SO4-2 /ANA -1.5/
+/end
+```
+
+This will change the `logK` of the sulfate complexation reaction and add a new surface specie `GCO3_new-`. NB: it is important to include the charge of `GCO3_new` in the input file. After running `GeoChemX` the surface fractions are as follows
+
+<table class="dotable" border="1">
+<thead>
+<tr><th align="center"> ﻿species </th> <th align="center">concentration</th> <th align="center"> fractions </th> <th align="center">  logK </th> </tr>
+</thead>
+<tbody>
+<tr><td align="center">   GCa+          </td> <td align="center">   2.12E-03         </td> <td align="center">   0.638817       </td> <td align="center">   0          </td> </tr>
+<tr><td align="center">   GCO3_new-     </td> <td align="center">   1.04E-03         </td> <td align="center">   0.0010419      </td> <td align="center">   0          </td> </tr>
+<tr><td align="center">   GCaOH         </td> <td align="center">   1.63E-06         </td> <td align="center">   0.000489977    </td> <td align="center">   12.8334    </td> </tr>
+<tr><td align="center">   GCO3_newNa    </td> <td align="center">   2.28E-03         </td> <td align="center">   0.686277       </td> <td align="center">   -0.8       </td> </tr>
+<tr><td align="center">   GCaSO4-       </td> <td align="center">   1.20E-03         </td> <td align="center">   0.360693       </td> <td align="center">   -1.5       </td> </tr>
+</tbody>
+</table>
+<br />
+
+## Bibliography
+
+ 1. <div id="stumm:92"></div> **W. Stumm, L. Sigg and B. Sulzberger**.  *Chemistry of the Solid-Water Interface: Processes at the Mineral-Water and Particle-Water Interface in Natural Systems*, *A Wiley-interscience publication*, Wiley, 1992, <http://books.google.no/books?id=0Sj-cJ0Nx0YC>, <http://books.google.no/books?id=0Sj-cJ0Nx0YC>.
+ 2. <div id="van1993surface"></div> **P. V. Cappellen, L. Charlet, W. Stumm and P. Wersin**.  A Surface Complexation Model of the Carbonate Mineral-Aqueous Solution Interface, *Geochimica et Cosmochimica Acta*, 57(15), pp. 3505-3518, 1993.
+ 3. <div id="Hiorth:10"></div> **A. Hiorth, L. Cathles and M. Madland**.  The Impact of Pore Water Chemistry on Carbonate Surface Charge and Oil Wettability, *Transport in Porous Media*, 85, pp. 1-21, 2010, \url 10.1007/s11242-010-9543-6, 10.1007/s11242-010-9543-6.
+ 4. <div id="appelo2005geochemistry"></div> **C. A. J. Appelo and D. Postma**.  *Geochemistry, Groundwater and Pollution*, 2nd edition edition, CRC Press, 2005.
+ 5. <div id="nodland2024new"></div> **O. Nodland and A. Hiorth**.  A New Formulation of the Surface Charge/surface Potential Relationship in Electrolytes With Valence Less Than Three, *Computational Geosciences*, 28(2), pp. 289-304, 2024.
+
+
