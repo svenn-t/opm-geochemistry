@@ -310,7 +310,7 @@ std::vector<EffluentIonData> OneDimensionalTransportSolver::solve(const std::str
     ICS_sol_[0]->charge_balance_ = ICS_full_->charge_balance_;
     ICS_sol_[0]->Temp_ = Temp;
     ICS_sol_[0]->Pres_ = Pres;
-    for (int solutionIdx = 1; solutionIdx < ICS_sol_.size(); ++solutionIdx)
+    for (std::size_t solutionIdx = 1; solutionIdx < ICS_sol_.size(); ++solutionIdx)
     {
         // NB: We always assume charge-balance for injected solutions.
         ICS_sol_[solutionIdx]->charge_balance_ = true;
@@ -385,7 +385,7 @@ std::vector<EffluentIonData> OneDimensionalTransportSolver::solve(const std::str
 
     const int PRINT_DEBUG = debug;
 
-    for (int solIdx = 1; solIdx < ICS_sol_.size(); ++solIdx)
+    for (std::size_t solIdx = 1; solIdx < ICS_sol_.size(); ++solIdx)
     {
         std::string solution_name = ICS_sol_[solIdx]->name();
         std::replace(solution_name.begin(), solution_name.end(), ' ', '_');
@@ -417,7 +417,7 @@ std::vector<EffluentIonData> OneDimensionalTransportSolver::solve(const std::str
 
     for (int i = 0; i < ICS_sol_[0]->size_aq_; ++i)
     {
-        assert(ICS_sol_[0]->kcmap_[i] >= 0 && ICS_sol_[0]->kcmap_[i] < Cchem_.size());
+        assert(ICS_sol_[0]->kcmap_[i] >= 0 && ICS_sol_[0]->kcmap_[i] < static_cast<int>(Cchem_.size()));
         Cchem_[ICS_sol_[0]->kcmap_[i]] = ICS_sol_[0]->c_vchem_[i];
     }
 
@@ -531,7 +531,7 @@ std::vector<EffluentIonData> OneDimensionalTransportSolver::solve(const std::str
         scharge[1][i] = psi_;
 
         // After calling SolveChem_I(), Cmin_ holds the precipitated amount of minerals...
-        for (int c = 0; c < Cmin_.size(); ++c)
+        for (std::size_t c = 0; c < Cmin_.size(); ++c)
         {
             Cmin[i][c] += Cmin_[c];
         }
@@ -679,7 +679,7 @@ std::vector<EffluentIonData> OneDimensionalTransportSolver::solve(const std::str
       }
     };
 
-    for(std::size_t i=0; i < NoBlocks; ++i) update_block_concentrations(i);
+    for(int i=0; i < NoBlocks; ++i) update_block_concentrations(i);
     write_NetCDF(0.0, 0.0);  // t = 0
 
     // Start simulation loop
@@ -812,7 +812,7 @@ std::vector<EffluentIonData> OneDimensionalTransportSolver::solve(const std::str
             }
             double min_corr = 1.;
             if (Imp) min_corr = (1. + Flush);
-            for (int c = 0; c < C_dummy.size(); ++c)
+            for (std::size_t c = 0; c < C_dummy.size(); ++c)
             {
                 Cmin[i][c] += C_dummy[c]*min_corr;
             }

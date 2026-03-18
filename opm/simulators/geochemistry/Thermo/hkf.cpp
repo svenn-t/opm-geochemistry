@@ -119,7 +119,7 @@ void hkf::dGIons(double T, double P, double* G, double* S,
     
     double ff;
     double Wi = 0.;
-    double w_T, w_TT, w_P,Wi_2;
+    double w_T, w_TT, w_P;
 
     for (int i = 0; i < size; ++i)
     {

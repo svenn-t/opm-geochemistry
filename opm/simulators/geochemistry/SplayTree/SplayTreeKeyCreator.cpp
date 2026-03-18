@@ -35,12 +35,12 @@ SplayTreeKeyCreator::SplayTreeKeyCreator(
     bool has_ion_exchange,
     bool has_surface_complexes
 )
-: splay_tree_resolution_(splay_tree_resolution)
-, no_basis_species_(max_no_basis_species)
+: no_basis_species_(max_no_basis_species)
 , no_minerals_(max_no_minerals)
 , num_key_log_(max_no_basis_species + 1)
 , num_key_lin_(max_no_minerals + 1)
 , num_key_(max_no_basis_species + max_no_minerals + 2)
+, splay_tree_resolution_(splay_tree_resolution)
 , log_bin_width_(std::pow(10.0, 1.0 / splay_tree_resolution))
 , lin_interval_length_(1.0)
 {
