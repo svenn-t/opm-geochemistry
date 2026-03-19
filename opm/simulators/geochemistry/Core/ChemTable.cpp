@@ -22,6 +22,9 @@
  * SOFTWARE.
 */
 #include <opm/simulators/geochemistry/Core/ChemTable.h>
+
+#include <cstddef>
+
 void ChemTable::split_and_add_to_vector(std::vector<std::string> &elements,const std::string &buffer,int skip, const std::string sep)
 {
     std::string buf=buffer;
@@ -61,10 +64,10 @@ void ChemTable::add_col_by_name(const std::string col_name, const std::string fi
     int cmi = 0;
     for (auto& row : CM->row_name_)
     {
-        auto it = std::find(row_name_.begin(), row_name_.end(), row);
-        if (it != row_name_.end())
+        auto it2 = std::find(row_name_.begin(), row_name_.end(), row);
+        if (it2 != row_name_.end())
         {
-            int pos_row = std::distance(row_name_.begin(), it);
+            int pos_row = std::distance(row_name_.begin(), it2);
             M_[pos_row][pos_col] = CM->M_[cmi][0];
         }
         cmi++;
@@ -105,7 +108,7 @@ void ChemTable::read_csv(const std::string file_name, std::string sep, bool nick
         M_.push_back(std::vector<double>(noColumns_,0.));
         for(;it != tmp_row.end();it++)
         {
-            int idx=it-tmp_row.begin()-skip_col;
+            std::size_t idx=it-tmp_row.begin()-skip_col;
             if(idx < M_.back().size())
                 M_.back()[idx]=std::stod(*it);
             // else skip elements
@@ -115,7 +118,7 @@ void ChemTable::read_csv(const std::string file_name, std::string sep, bool nick
 
 }
 
-void ChemTable::write_csv(const std::string file_name, std::string sep)
+void ChemTable::write_csv(const std::string file_name, [[maybe_unused]] std::string sep)
 {
     std::ofstream dbf(file_name, std::ios::out);
     if (!dbf.is_open())
@@ -141,7 +144,7 @@ void ChemTable::write_csv(const std::string file_name, std::string sep)
 // drops columns in M_ - matrix and col_name_ that are listed in std::vector
 void ChemTable::drop_col(std::vector<int> &columns_to_drop)
 {
-    if (columns_to_drop.size() != noColumns_)
+    if (columns_to_drop.size() != static_cast<std::size_t>(noColumns_))
         error_and_exit("ChemTable::drop_col(): Enter one value for each column {:d}", columns_to_drop.size());
     std::vector<std::vector<double>> M_new;
     std::vector<std::string> col_name_new;
@@ -250,7 +253,6 @@ void ChemTable::move_col(std::string col_name, int new_pos)
 
 
         if (idx == new_pos) return;
-        int low, high;
         if (idx < new_pos)
         {
             std::string tmp = col_name_[idx];
@@ -778,7 +780,7 @@ void ChemTable::initialize_full_database_hkf(ChemTable::Type type, const std::ve
     noColumns_ = col_name_.size();
 
     M_.resize(noRows_);
-    for (int i = 0; i < database_.size()-1; ++i)
+    for (std::size_t i = 0; i < database_.size()-1; ++i)
     {
         buf.clear();
         buf.str(database_[i+1]);
@@ -860,7 +862,6 @@ void  ChemTable::add_cubic_EOS_parameters_for_gases()
     Pc_.resize(noRows_, 0.);
     Tc_.resize(noRows_, 0.);
 
-    std::stringstream buf;
     for (const auto& line : eos_data)
     {
 
@@ -960,10 +961,10 @@ int ChemTable::add_species_row(const std::string& name, const std::vector<double
         std::vector<double> temp;
         temp.resize(noColumns_, input_values.back());
 
-        int no_values = noColumns_;
+        std::size_t no_values = noColumns_;
         if (input_values.size() < no_values)    no_values = input_values.size();
 
-        for (int i = 0; i < no_values; ++i)     temp[i] = input_values[i];
+        for (std::size_t i = 0; i < no_values; ++i)     temp[i] = input_values[i];
 
         for (int i = 0; i < noColumns_; ++i)    M_[noRows_ - 1][i] = temp[i];
     }
@@ -1003,7 +1004,7 @@ int ChemTable::add_reaction(const std::string& reac,
 
     // If we get to this point, we know the element exists in db
     model_[j] = model;
-    for (int i = 0; i < stoic.size(); ++i)
+    for (std::size_t i = 0; i < stoic.size(); ++i)
     {
         M_[j][pos[i]] = stoic[i];
     }
@@ -1033,7 +1034,7 @@ int ChemTable::add_reaction(const std::string& reac,
     k = index_of_element_in_container("DeltaG", col_name_);
     if(k >= 0)
     {
-        for (int offset = 0; offset < hkf.size(); ++offset)
+        for (std::size_t offset = 0; offset < hkf.size(); ++offset)
         {
             M_[j][k+offset] = hkf[offset];  // DeltaG, ... (and the rest)
         }
@@ -1136,7 +1137,7 @@ void ChemTable::update_logK_analytical(double T,double P)
 void ChemTable::fix_hkf_units(ChemTable::Type type)
 {
     constexpr double cal2J = UnitConversionFactors::cal2J_;
-    constexpr double bar2Pa = UnitConversionFactors::bar2Pa_;
+    [[maybe_unused]] constexpr double bar2Pa = UnitConversionFactors::bar2Pa_;
     constexpr double eta = UnitConversionFactors::eta_;
 
     if(type == ChemTable::Type::Basis)
@@ -1283,7 +1284,7 @@ void ChemTable::set_up_sparse_matrix()
     }
 }
 
-void ChemTable::erase_row(int pos)
+void ChemTable::erase_row(std::size_t pos)
 {
     // CHECK: ">" or ">=" ?
     if (row_name_.size() > pos)     remove_element_from_vector(row_name_, pos);

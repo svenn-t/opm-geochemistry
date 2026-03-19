@@ -286,7 +286,7 @@ BasVec::BasVec(InitChem* ICS_in)
     add_gas_phase_to_total_conc();
     // gas phases present in gas_phase_ treated seperately
 
-    for (int i = 0; i < ICS_->SM_mineral_->row_name_.size(); ++i)
+    for (int i = 0; i < static_cast<int>(ICS_->SM_mineral_->row_name_.size()); ++i)
     {
         const int el = index_of_element_in_array(i, ICS_->pos_gas_phase_.data(), ICS_->size_gas_phase_);
         if (el < 0)
@@ -308,7 +308,7 @@ BasVec::BasVec(InitChem* ICS_in)
     }
 
     // VERY IMPORTANT: The following code ASSUMES that minerals are linearly independent.
-    assert(number_of_non_null_values(ICS_->rate_) == ICS_->size_sup_min_);
+    assert(number_of_non_null_values(ICS_->rate_) == static_cast<std::size_t>(ICS_->size_sup_min_));
     size_sup_min_ = 0;
     for(int i=0; i < ICS_->size_sup_min_; ++i)
     {
@@ -527,7 +527,7 @@ void BasVec::write(const std::string& name)
 // write solution chemistry in tabulated form
 void BasVec::write_solution_chemistry(const std::string& name,bool include_reactions)
 {
-    const ChemTable& SM_mineral = *ICS_->SM_mineral_;
+    [[maybe_unused]] const ChemTable& SM_mineral = *ICS_->SM_mineral_;
     const ChemTable& SM_basis = *ICS_->SM_basis_;
     const ChemTable& SM_all = *ICS_->SM_all_;
     std::vector<double> log_m, log_a, log_g,logK,mol_volume;
@@ -1415,7 +1415,7 @@ void BasVec::update_dG(hkf& HKF_EOS, double T, double P)
     );
 }
 
-void BasVec::update_logK(hkf& HKF_EOS, double T)
+void BasVec::update_logK([[maybe_unused]] hkf& HKF_EOS, double T)
 {
     const double fact = 1.0 / (NumericalConstants::LNTEN*PhysicalConstants::IdealGasConstant*T);
     const auto& dG_basis = ICS_->SM_basis_->dG_TP_;
@@ -1497,7 +1497,7 @@ void BasVec::set_temperature_for_equilibrium_reactions(hkf& HKF_EOS)
 void BasVec::add_gas_phase_to_total_conc()
 {
     if (size_gase_phase_ < 1) return;
-    static constexpr double Rg = PhysicalConstants::IdealGasConstant;
+    [[maybe_unused]] static constexpr double Rg = PhysicalConstants::IdealGasConstant;
     const double fact = 1e-3*gas_phase_frac_ / (PhysicalConstants::IdealGasConstant * Temp_[gFluidPhase::GAS]); //mol/L
     for (int i = 0; i < size_; ++i)
     {

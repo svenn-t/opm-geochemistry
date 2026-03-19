@@ -24,8 +24,7 @@
 #include <opm/simulators/geochemistry/Core/ChemGCSolver.h>
 
 GCSolver::GCSolver(GeoLogger* logger, BasVec* Vchem, int sizeB, int sizeM, int MaxSizeBasis, int MaxSizeComp, int MaxSizeMin)
-    : logger_(logger)
-    , c0_()
+    : c0_()
     , c0_ads_()
     , c0_min_()
     , cT_()
@@ -44,6 +43,7 @@ GCSolver::GCSolver(GeoLogger* logger, BasVec* Vchem, int sizeB, int sizeM, int M
     , options_()
     , Vchem_(Vchem)
     , HKF_EOS_(nullptr)
+    , logger_(logger)
 //
     , c_dl_excess_()
 {
@@ -171,7 +171,7 @@ bool GCSolver::SolveChem()
  * @return Potentially new mineral key (or the old one back).
  */
 int GCSolver::SolveChem_ST(int key,
-                           double dt,
+                           [[maybe_unused]] double dt,
                            const std::array<double, 3>& mass_phase,
                            const double* c_bas,
                            const double* c_ads,
@@ -387,7 +387,6 @@ bool GCSolver::solve_chemistry()
     double Io_old = Vchem_->update_ionic_strength();
     Vchem_->update_activity_coefficients(Io_old);
     double Z_factor_old = Z_factor_gas_;
-    double Z_factor_old2= Z_factor_gas_;
     if (Vchem_->surface_options_.CALCULATE_DIFFUSE_LAYER) integrate_diffuse_layer_for_mono_or_divalent_ions();
 
     // Experimental model with variable cation / anion - exchange capacity
@@ -406,10 +405,10 @@ bool GCSolver::solve_chemistry()
     }
 
     double x_curr;  // == -pH
-    double x_next;
+    double x_next{};
     double f_next;
-    double x_old;
-    double f_old;
+    double x_old{};
+    double f_old{};
     double delta_x;
 
     double exch_capacity_dl_old = 0.0;
@@ -609,7 +608,7 @@ void GCSolver::newton_ah_log(const RealVec& x, RealVec& Fchem, double** jacobi)
     const double kappa_s = calc_kappa();
 
     // Calculate E=exp(F*psi0/RT)
-    double E;
+    double E{};
     if(Vchem_->surface_flag_)
     {
         const auto logE = static_cast<double>(x[Vchem_->size_mass_]);
@@ -1580,7 +1579,8 @@ void GCSolver::calc_jacobi_grahame_wrt_E0(double** jacobi, double kappa_s, doubl
     jacobi[Vchem_->size_mass_+1][Vchem_->size_mass_+1] *= NumericalConstants::LNTEN*options_.MBAL_SCALE_SURF_;
 }
 
-void GCSolver::calc_jacobi_grahame_wrt_E0_simple(double** jacobi, double kappa_s, double E, const RealVec& mpow, const RealVec& smpow) const
+void GCSolver::calc_jacobi_grahame_wrt_E0_simple(double** jacobi, double kappa_s, double E,
+                                                 [[maybe_unused]] const RealVec& mpow, const RealVec& smpow) const
 {
     const ChemTable& SM_all = *Vchem_->ICS_->SM_all_;
 
@@ -2225,7 +2225,8 @@ double GCSolver::diffuse_layer_integrand_simple(double E, double charge)
 }
 
 /** Note: A difference from the various impl. of the Grahame eq. is that we multiply both sides with S/F.*/
-void GCSolver::calc_F_diffuse_layer_cbal_simple(RealVec& Fchem, double kappa_s, double E, const RealVec& mpow, const RealVec& smpow)
+void GCSolver::calc_F_diffuse_layer_cbal_simple(RealVec& Fchem, [[maybe_unused]] double kappa_s,
+                                                double E, const RealVec& mpow, const RealVec& smpow)
 {
     calc_surface_charge(mpow, smpow);
     update_monovalent_divalent_charge_factor(E);
@@ -2242,8 +2243,8 @@ void GCSolver::calc_F_diffuse_layer_cbal_simple(RealVec& Fchem, double kappa_s, 
 void GCSolver::calc_jacobi_diffuse_layer_cbal_simple_wrt_mq(int q,
                                                             int pos_q,
                                                             double** jacobi,
-                                                            double kappa_s,
-                                                            double E,
+                                                            [[maybe_unused]] double kappa_s,
+                                                            [[maybe_unused]] double E,
                                                             const RealVec& mpow,
                                                             const RealVec& smpow) const
 {
@@ -2315,9 +2316,9 @@ void GCSolver::calc_jacobi_diffuse_layer_cbal_simple_wrt_mq(int q,
 
 /** d(Grahame)/d log_10 E0. */
 void GCSolver::calc_jacobi_diffuse_layer_cbal_simple_wrt_E0(double** jacobi,
-                                                            double kappa_s,
-                                                            double E,
-                                                            const RealVec& mpow,
+                                                            [[maybe_unused]] double kappa_s,
+                                                            [[maybe_unused]] double E,
+                                                            [[maybe_unused]] const RealVec& mpow,
                                                             const RealVec& smpow) const
 {
     // Note (3/1-22): Since derivatives of basis species wrt. to E0 vanish,
@@ -2366,7 +2367,7 @@ void GCSolver::calc_jacobi_diffuse_layer_cbal_simple_wrt_E0(double** jacobi,
 void GCSolver::calc_jacobi_grahame_symmetrical_wrt_E0(double** jacobi,
                                                       double kappa_s,
                                                       double E,
-                                                      const RealVec& mpow,
+                                                      [[maybe_unused]] const RealVec& mpow,
                                                       const RealVec& smpow) const
 {
     const ChemTable& SM_all = *Vchem_->ICS_->SM_all_;
@@ -2701,7 +2702,6 @@ double GCSolver::A_EOS(double P, double T, double omega, double Pc, double Tc)
 }
 double GCSolver::B_EOS(double P, double T, double Pc, double Tc)
 {
-    double fc = (PhysicalConstants::IdealGasConstant * Tc);
     double f = (PhysicalConstants::IdealGasConstant * T);
     double b = small_b_EOS(Tc,Pc);
     return b * P / f;
@@ -2728,11 +2728,6 @@ void GCSolver::update_fugacity_and_mol_volume()
             double Ac = A_EOS(P, T, omega, Pc, Tc);
             double Bc = B_EOS(P, T, Pc, Tc);
             double upper_limit = 2;
-            double lower_limit = .1;
-            auto EOS = [Ac, Bc](double Z)
-                {
-                    return Z * Z * Z - (1 - Bc) * Z * Z + (Ac - 2 * Bc - 3 * Bc * Bc) * Z - (Ac * Bc - Bc * Bc - Bc * Bc * Bc);
-                };
 
             double param1 = 1.0;
             double param2 = -(1.0 - Bc);
@@ -2839,7 +2834,6 @@ void GCSolver::update_fugacity_and_mol_volume_mixtures()
 
 
 
-        double Z_factor_gas_old = Z_factor_gas_;
         int iter = 0;
         while (EOS(lower_limit) * EOS(upper_limit) > 0 && iter < 5)
         {
@@ -2885,7 +2879,7 @@ void GCSolver::update_fugacity_and_mol_volume_mixtures()
             for (int i = 0; i < Vchem_->size_gase_phase_; ++i)
             {
                 int pos = Vchem_->pos_gas_phase_[i];
-                double fi = POW10(Vchem_->ICS_->SM_mineral_->log_a_[pos]) * PhysicalConstants::atmospheric_pressure;
+                [[maybe_unused]] double fi = POW10(Vchem_->ICS_->SM_mineral_->log_a_[pos]) * PhysicalConstants::atmospheric_pressure;
                // Vchem_->mol_fraction_gas_phase_[i] = fi / (Vchem_->ICS_->SM_mineral_->fugacity_[pos] * Vchem_->Pres_[gFluidPhase::GAS]);
             }
         }

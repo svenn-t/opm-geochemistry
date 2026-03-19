@@ -322,7 +322,7 @@ private:
     
 private:
     
-    void erase_row(int pos);
+    void erase_row(std::size_t pos);
     void erase_row_elements(const std::vector<std::string>& names);
     
     void resize_col(int size, double default_val=0.);

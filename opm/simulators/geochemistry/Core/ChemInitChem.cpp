@@ -105,7 +105,7 @@ InitChem::InitChem(
     io_name_ = io_name;
     surf_name_ = surf_name;
     mineral_name_ = mineral_name;
-    assert(mineral_name_.size() == size_min_);
+    assert(mineral_name_.size() == static_cast<std::size_t>(size_min_));
 
     sup_min_name_.resize(size_sup_min_);
     for (int j = 0; j < size_sup_min_; ++j)
@@ -147,7 +147,7 @@ std::vector<std::string> InitChem::remove_organic_species()
     int pos_hco = SM_basis_->get_row_index("HCO3-");
     if (pos_e > -1 && pos_hco > -1)
     {
-        for (int i = 0; i < SM_all_->row_name_.size(); ++i)
+        for (std::size_t i = 0; i < SM_all_->row_name_.size(); ++i)
         {
             if (SM_all_->M_[i][pos_e] != 0 && SM_all_->M_[i][pos_hco] != 0)
                 species_to_remove.push_back(SM_all_->row_name_[i]);
@@ -237,7 +237,7 @@ InitChem* InitChem::create_from_ICS_full(const InitChem& ICS_full,
     // Specify which basis species are surface species
     std::vector<std::string> io_name;
     std::vector<std::string> surf_name;
-    for (int i = 0; i < basis_name.size(); ++i)
+    for (std::size_t i = 0; i < basis_name.size(); ++i)
     {
         const int type = ICS_full.SM_basis_->type_[ICS_full.pos_[basis_offset_index[i]]];
 
@@ -451,7 +451,6 @@ std::vector<std::string> InitChem::get_basis_species_of_type(int component_type)
 std::vector<std::string> InitChem::get_secondary_species_of_type(int component_type) const
 {
     const auto& all_names = SM_all_->row_name_;
-    const auto& types = SM_all_->type_;
 
     std::vector<std::string> names;
     for(std::size_t j=0; j < all_names.size(); ++j)
@@ -616,7 +615,7 @@ void InitChem::reorder_species(const std::vector<std::string>& speciesNamesInOrd
     for(const auto& specie: speciesNamesInOrder)
     {
         auto SPECIE = to_upper_case(specie); // basis_specie_name_ is always upper case
-        std::size_t swapIndex = index_of_element_in_container(SPECIE, basis_species_name_);
+        const int swapIndex = index_of_element_in_container(SPECIE, basis_species_name_);
         if(swapIndex == -1) continue;
         std::swap(basis_species_name_[addedIndex], basis_species_name_[swapIndex]);
         std::swap(c_vchem_[addedIndex], c_vchem_[swapIndex]);
@@ -1944,7 +1943,7 @@ void InitChem::check_db(ChemTable* Test, ChemTable* Basis)
         if (except)
         {
             fmt::print("{} (charge={}, scharge={}) = ", Test->row_name_[i], Test->charge_[i], Test->scharge_[i]);
-            for (int j = 0; j < Test->sparseM_[i].size(); ++j)
+            for (std::size_t j = 0; j < Test->sparseM_[i].size(); ++j)
             {
                 int x = Test->sparseM_[i][j].first;
                 fmt::print("{} {} (charge {}, scharge {})", Test->sparseM_[i][j].second, Basis->row_name_[x], Basis->charge_[x], Basis->scharge_[x]);
@@ -1984,7 +1983,7 @@ void InitChem::clean_transformation()
         keys.push_back(key.first);
         vals.push_back(key.second);
     }
-    for (int itr = 0; itr < keys.size(); ++itr)
+    for (std::size_t itr = 0; itr < keys.size(); ++itr)
     {
         int bn = Basis_db_->get_row_index(keys[itr]);
         int an = Aq_db_->get_row_index(vals[itr]);
@@ -2004,9 +2003,8 @@ void InitChem::clean_transformation()
     for (auto key : basis_transformation_)
     {
         int bn = Basis_db_->get_row_index(key.first);
-        int an = Aq_db_->get_row_index(key.second);
 
-        for (int i = 0; i < basis_species_name_.size(); ++i)
+        for (std::size_t i = 0; i < basis_species_name_.size(); ++i)
         {
             int oldb = Basis_db_->get_row_index(basis_species_name_[i]);
             if (oldb == bn)
@@ -2043,7 +2041,7 @@ void InitChem::basis_transformation()
         for (int j = 0; j < sizeB; ++j)
             BasisTrans[i][j] = (i==j?1.:0.);
 
-    for (int i = 0; i < oldb.size(); ++i)
+    for (std::size_t i = 0; i < oldb.size(); ++i)
     {
         double Mw = 0.;
         for (int j = 0; j < sizeB; ++j)
@@ -2063,7 +2061,7 @@ void InitChem::basis_transformation()
 
     std::map<std::string, std::vector<double >&>::iterator it;
     std::map<std::string, std::vector<std::string >&>::iterator its;
-    for (int i = 0; i < oldb.size(); ++i)
+    for (std::size_t i = 0; i < oldb.size(); ++i)
     {
         for (it = Aq_db_->double_vector_map_.begin(); it != Aq_db_->double_vector_map_.end();++it)
         {
@@ -2095,7 +2093,7 @@ void InitChem::basis_transformation()
 
     }
     // add correct matrix elements for aq complex, e.g. Ca+2 prev basis element now aqueous complex
-    for (int i = 0; i < oldb.size(); ++i)
+    for (std::size_t i = 0; i < oldb.size(); ++i)
     {
         for (int j = 0; j < sizeB; ++j)
         {

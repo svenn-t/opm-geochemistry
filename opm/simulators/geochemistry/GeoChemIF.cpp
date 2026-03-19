@@ -274,7 +274,7 @@ void CGeoChemIF::SolveChem_I(double* ctot,
                              double* log_a_min,
                              double Temp,
                              double Pres,
-                             double porosity,
+                             [[maybe_unused]] double porosity,
                              double dt,
                              double SA,
                              double frac_DL,
@@ -451,7 +451,7 @@ void CGeoChemIF::SolveChem_I(double* ctot,
  */
 void CGeoChemIF::AddPhases(const PairOfPhaseNamesAndTypes& names_and_types, const std::string& unique_identifier)
 {
-    const int max_no_solutions = geoChemPhases_.phaseSize(GeochemicalPhaseType::AQUEOUS_SOLUTION);
+    const std::size_t max_no_solutions = geoChemPhases_.phaseSize(GeochemicalPhaseType::AQUEOUS_SOLUTION);
     if (ICS_sol_.empty())
     {
         ICS_sol_.reserve(max_no_solutions);
@@ -716,7 +716,7 @@ void CGeoChemIF::create_ICS_full(const std::vector<std::string>& species_names_i
 
 void CGeoChemIF::set_data_for_solution(const std::string& solutionName, double porosity)
 {
-    for (int solutionIndex = 0; solutionIndex < ICS_sol_.size(); ++solutionIndex)
+    for (std::size_t solutionIndex = 0; solutionIndex < ICS_sol_.size(); ++solutionIndex)
     {
         if (ICS_sol_[solutionIndex]->name() == solutionName)
         {
@@ -727,9 +727,9 @@ void CGeoChemIF::set_data_for_solution(const std::string& solutionName, double p
     std::cout << "No solution named " << solutionName << "\n";
 }
 
-void CGeoChemIF::set_data_for_solution(int solIdx, double porosity)
+void CGeoChemIF::set_data_for_solution(std::size_t solIdx, double porosity)
 {
-    if (solIdx >= ICS_sol_.size() || solIdx < 0) return;  // throw error?
+    if (solIdx >= ICS_sol_.size()) return;  // throw error?
 
     const double r_density = ICS_full_->compute_rock_density(porosity);  // kg/m^3
 

@@ -27,7 +27,7 @@
 * Creates the file .nc-file, provided the netCDF library is present on the system and is detected.
 * The Replace parameter tells netCDF to overwrite the file if it already exists.
 */
-NetCDFWriter::NetCDFWriter(const std::string& file_name)
+NetCDFWriter::NetCDFWriter([[maybe_unused]] const std::string& file_name)
 #ifdef NETCDF
 : netCDF_file_(file_name, netCDF::NcFile::replace)
 , dimensions_()
@@ -38,7 +38,7 @@ NetCDFWriter::NetCDFWriter(const std::string& file_name)
 // Unsolved: How to handle multiple (unlimited) time-variables that should be synchronized at all times?
 // (i.e., time in hours + pore volumes)
 // For now, we only report regular times....
-void NetCDFWriter::initialize(int nx, double* x_coordinates)
+void NetCDFWriter::initialize(int nx, [[maybe_unused]] double* x_coordinates)
 {
     nx_ = nx;
 
@@ -89,7 +89,8 @@ void NetCDFWriter::incrementTime(double time, double pvi)
     currentPoreVolumes_ = pvi;
 }
 
-int NetCDFWriter::writeField(const std::string& field_name, double* field_values)
+int NetCDFWriter::writeField([[maybe_unused]] const std::string& field_name,
+                             [[maybe_unused]] double* field_values)
 {
 
 #ifdef NETCDF

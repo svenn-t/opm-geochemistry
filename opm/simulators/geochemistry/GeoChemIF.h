@@ -189,7 +189,7 @@ class CGeoChemIF
     void create_ICS_full(const std::vector<std::string>& species_names_in_order={});
 
     void set_data_for_solution(const std::string& solutionName, double porosity);
-    void set_data_for_solution(int solIdx, double porosity);
+    void set_data_for_solution(std::size_t solIdx, double porosity);
 
     void equilibrate_solution
         (

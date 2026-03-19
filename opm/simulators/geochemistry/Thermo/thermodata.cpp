@@ -457,7 +457,6 @@ void thermodata::sub_basis_set()
         sizeB,
         Basis_Trans_inv_,
         determinant);
-    int pos = find_specie("CaCO3", aq_);
     remove_specie("BaCO3", aq_); // HKF contains both BaCO3 and Ba(CO3)
     remove_specie("CaCO3", aq_); // HKF contains both CaCO3 and Ca(CO3)
     remove_specie("MgCO3", aq_); // HKF contains both MgCO3 and Mg(CO3)
@@ -576,7 +575,7 @@ void thermodata::sub_basis_set()
         of_dbg3 << bas <<"\t";
 
         std::size_t pos_j = 0;
-        for(const auto& bas_sub: sub_basis_set_)
+        for([[maybe_unused]] const auto& bas_sub: sub_basis_set_)
         {
             of_dbg3 << Basis_Trans_[pos_i][pos_j] << "\t";
             ++pos_j;
@@ -599,7 +598,7 @@ void thermodata::sub_basis_set()
         of_dbg4 << bas_sub << "\t";
 
         std::size_t pos_j = 0;
-        for(const auto& new_bas: new_basis_set_)
+        for([[maybe_unused]] const auto& new_bas: new_basis_set_)
         {
             of_dbg4 << Basis_Trans_inv_[pos_i][pos_j] << "\t";
             ++pos_j;

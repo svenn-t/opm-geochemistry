@@ -171,7 +171,7 @@ std::tuple<std::vector<ParsedSpecieData>, LogKData> parseMineralPhase(const std:
         error_and_exit("No molar volume entered for reaction and data {:s}.", str_mineral_phase);
     }
 
-    int max_size = (model == LogKModel::ANA) ? MAX_SIZE_ANA_MINERAL : MAX_SIZE_HKF_MINERAL;
+    const std::size_t max_size = (model == LogKModel::ANA) ? MAX_SIZE_ANA_MINERAL : MAX_SIZE_HKF_MINERAL;
 
     if (model == LogKModel::ANA && values.empty())
     {
