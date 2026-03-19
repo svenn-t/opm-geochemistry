@@ -1,0 +1,162 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Core flooding with adsorption of sulphate and cation exchange">
+<title>Core flooding with adsorption of sulphate and cation exchange</title>
+<!-- Bootstrap style: bootswatch_readable -->
+<!-- doconce format html main_transportII.do.txt --html_style=bootswatch_readable --html_output=transportII-readable --html_code_style=inherit -->
+<link href="https://netdna.bootstrapcdn.com/bootswatch/3.1.1/readable/bootstrap.min.css" rel="stylesheet">
+<!-- not necessary
+<link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+-->
+<style type="text/css">
+/* Let inline verbatim have the same color as the surroundings */
+code { color: inherit; background-color: transparent; }
+/* Add scrollbar to dropdown menus in bootstrap navigation bar */
+.dropdown-menu {
+   height: auto;
+   max-height: 400px;
+   overflow-x: hidden;
+}
+/* Adds an invisible element before each target to offset for the navigation
+   bar */
+.anchor::before {
+  content:"";
+  display:block;
+  height:64px;      /* fixed header height for style bootswatch_readable */
+  margin:-64px 0 0; /* negative fixed header height */
+}
+</style>
+</head>
+
+<h1
+id="core-flooding-with-adsorption-of-sulphate-and-cation-exchange">Core
+flooding with adsorption of sulphate and cation exchange</h1>
+<p>This tutorial is the same as shown for the standalone
+<code>GeoChemX</code> program given here: <a
+href="../../geochemx/transportII/html/transportII-readable.html">Adsorption
+of sulphate and cation exchange in core</a>. Furthermore, OPM Flow deck
+keywords are explained in more details in the <a
+href="../phreeqc_ex_11/PHREEQC_ex_11.html">PHREEQC example 11</a> and <a
+href="../mineral_interaction/magnesite_calcite_example.html">Mineral
+reactions</a> tutorials. We will therefore not go into much details on
+the setup of the simulations here.</p>
+<h2 id="opm-flow-deck">OPM Flow deck</h2>
+<p>We will focus on the specific keywords for setting up the
+geochemistry parts of the deck, and refer to the <a
+href="https://opm-project.org/?page_id=955">OPM Flow manual</a> for
+other keywords encountered in the <a href="./opm/TRANSPORTII.DATA">full
+deck</a>.</p>
+<p>Geochemistry is activated using the <code>GEOCHEM</code> keyword:</p>
+<pre><code>RUNSPEC
+
+[...]
+
+GEOCHEM
+    transportII.json  1e-7 1e-8 CHARGE    /</code></pre>
+<p>The first item is a <a href="./opm/transportII.json">JSON file</a>
+with information that will be forwarded to the geochemistry solver:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;BASIS_SPECIES&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;SCN- 5 58.08 / HKF 909090 9 /&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;COMPLEX&quot;</span> <span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;COMPLEX 0&quot;</span> <span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;METHOD&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;S_AREA&quot;</span><span class="fu">:</span> <span class="st">&quot;5000.0 10&quot;</span><span class="fu">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;GCa&quot;</span><span class="fu">:</span> <span class="st">&quot;4.95&quot;</span><span class="fu">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;GCO3&quot;</span><span class="fu">:</span> <span class="st">&quot;4.95&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The <code>BASIS_SPECIES</code> adds a new, user-specified basis
+species with database information as explained <a
+href="../../geochemx/transport/html/transport-readable.html">here</a>,
+while the <code>COMPLEX</code> block defines surface complexation as
+explained <a
+href="../../geochemx/complex/html/complex-readable.html">here</a>.</p>
+<p>The second and third item in <code>GEOCHEM</code> keyword are
+material balance and pH convergence tolerances, while the forth item
+forces charge balance in the geochemical equilibrium solver.</p>
+<p>The transported species, minerals, and ion exchange are defined with
+the <code>SPECIES</code>, <code>MINERAL</code>, and <code>IONEX</code>
+keywords in the <code>PROPS</code> section:</p>
+<pre><code>PROPS
+
+[...]
+
+SPECIES
+    H HCO3 CA NA K SCN- SO4 /
+
+MINERAL
+    CALCITE /
+
+IONEX
+    X /</code></pre>
+<div class="alert alert-block alert-success alert-text-normal"><b>Note</b>
+<p><code>SCN-</code> is the user-defined species
+given in the <a href="./opm/transportII.json">JSON input file</a>.</p>
+</div>
+<p>The initial conditions for the transported species are given through
+<code>&lt;S/M/I&gt;BLK&lt;name&gt;</code> keywords in the
+<code>SOLUTION</code> section:</p>
+<pre><code>SOLUTION
+
+[...]
+
+SBLKH
+    20*1.0 /
+SBLKHCO3
+    20*1e-8 /
+SBLKCA
+    20*1e-8 /
+SBLKNA
+    20*0.0 /
+SBLKK
+    20*0.0 /
+SBLKSCN-
+    20*0.0 /
+SBLKSO4
+    20*0.0 /
+
+MBLKCALCITE
+    20*1.0 /
+
+IBLKX
+    20*0.09 /</code></pre>
+<p>The in- and outflow of water (with aqueous species) are handled by
+standard well keywords (see <a
+href="https://opm-project.org/?page_id=955">OPM Flow manual</a>) and the
+<code>WSPECIES</code> keyword:</p>
+<pre><code>SCHEDULE
+
+[...]
+
+WSPECIES
+    INJ NA   4.8e-2 /
+    INJ K    2.4e-2 /
+    INJ SCN- 2.4e-2 /
+    INJ SO4  2.4e-2 /
+/</code></pre>
+<h2 id="run-simulation">Run simulation</h2>
+<p>The OPM Flow <a href="./opm/TRANSPORTII.DATA">deck</a> is run with
+the following command:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">flow_onephase_geochemistry</span> <span class="at">--enable-opm-rst-file</span><span class="op">=</span>true <span class="at">--solver-max-time-step-in-days</span><span class="op">=</span>2e-4 TRANSPORTII.DATA</span></code></pre></div>
+<h2 id="simulation-results">Simulation results</h2>
+A video of transported species:
+<div data-align="center">
+<p><img src="./figures/core_flood.gif" width="800" align="bottom"></p>
+</div>
+Comparison between OPM Flow and <code>GeoChemX</code> results:
+<div data-align="center">
+<p><img src="./figures/opm_geochemx_outflow_compare.png" width="800" align="bottom"></p>
+</div>
+Comparison of OPM Flow and data:
+<div data-align="center">
+<p><img src="./figures/opm_data_compare.png" width="800" align="bottom"></p>
+</div>

@@ -1,0 +1,219 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Mineral Reactions Example - Calcite and Magnesite">
+<title>Mineral Reactions Example - Calcite and Magnesite</title>
+<!-- Bootstrap style: bootswatch_readable -->
+<!-- doconce format html main_transportII.do.txt --html_style=bootswatch_readable --html_output=transportII-readable --html_code_style=inherit -->
+<link href="https://netdna.bootstrapcdn.com/bootswatch/3.1.1/readable/bootstrap.min.css" rel="stylesheet">
+<!-- not necessary
+<link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+-->
+<style type="text/css">
+/* Let inline verbatim have the same color as the surroundings */
+code { color: inherit; background-color: transparent; }
+/* Add scrollbar to dropdown menus in bootstrap navigation bar */
+.dropdown-menu {
+   height: auto;
+   max-height: 400px;
+   overflow-x: hidden;
+}
+/* Adds an invisible element before each target to offset for the navigation
+   bar */
+.anchor::before {
+  content:"";
+  display:block;
+  height:64px;      /* fixed header height for style bootswatch_readable */
+  margin:-64px 0 0; /* negative fixed header height */
+}
+</style>
+</head>
+
+<h1 id="mineral-reactions-example---calcite-and-magnesite">Mineral
+Reactions Example - Calcite and Magnesite</h1>
+<p>This tutorial showcase mineral reactions in a simple 1D core flood
+simulation. The core is initially filled with water and calcite in
+equilibrium. As the core is flooded with magnesite chloride from left to
+right, calcite is completely dissolved and magnesite is precipitated in
+a one-to-one ratio.</p>
+<div data-align="center">
+<p><img src="./figures/magnesite_calcite_setup.png" width="800" align="bottom"></p>
+</div>
+<p>The core flood simulatino is run in OPM Flow as a single phase, water
+flow with wells for in- and outflow of water with chemical species.
+Since the chemical species does not affect the properties of the fluid,
+this is in essence a tracer transport problem with local chemical
+equilibrium calculations.</p>
+<h2 id="opm-flow-deck">OPM Flow deck</h2>
+<p>We will only point out selected keywords necessary to set up the
+reactive transport, and refer to the <a
+href="https://opm-project.org/?page_id=955">OPM Flow manual</a> for
+other keywords encountered in the <a href="./opm/MG_CC.DATA">full
+deck</a>.</p>
+<p>Geochemistry is activated using the <code>GEOCHEM</code> keyword:</p>
+<pre><code>RUNSPEC
+
+[...]
+
+GEOCHEM
+    1*  1e-7 1e-8 CHARGE    /</code></pre>
+<p>The first item is a JSON file name for all inputs to the geochemical
+solver that are not passed through the deck (not needed in this
+example). The second and third item are material balance and pH
+convergence tolerances, while the forth item forces charge balance in
+the geochemical equilibrium solver.</p>
+<p>The transported species are defined with the <code>SPECIES</code>
+keyword in the <code>PROPS</code> section:</p>
+<pre><code>PROPS
+
+[...]
+
+SPECIES
+    CA CL H HCO3 MG    /</code></pre>
+<p>
+  The species are as follows:
+</p>
+
+<ul>
+  <li>
+    <code>CA</code>: calcium (Ca<sup>2+</sup>)
+  </li>
+  <li>
+    <code>CL</code>: chlorine (Cl<sup>-</sup>)
+  </li>
+  <li>
+    <code>H</code>: hydrogen (H<sup>+</sup>)
+  </li>
+  <li>
+    <code>HCO3</code>: bicarbonate (HCO<sub>3</sub><sup>-</sup>)
+  </li>
+  <li>
+    <code>MG</code>: magnesium (Mg<sup>2+</sup>)
+  </li>
+</ul>
+<p>The minerals are defined in the <code>MINERAL</code> keyword in the
+<code>PROPS</code> section:</p>
+<pre><code>PROPS
+
+[...]
+
+MINERAL
+    CAL MGS /</code></pre>
+
+<p>
+  The minerals have been given by their database “nickname”, and are as follows:
+</p>
+
+<ul>
+  <li>
+    <code>CAL</code>: calcite (CaCO<sub>3</sub>)
+  </li>
+  <li>
+    <code>MGS</code>: magnesite (MgCO<sub>3</sub>)
+  </li>
+</ul>
+
+<div class="alert alert-block alert-success alert-text-normal"><b>Note</b>
+<p> A full list of accepted minerals in the
+geochemistry solver can be found <a
+href="../../geochemx/equilibrium_phases/html/equilibrium_phases-readable.html">here</a>.</p>
+</div>
+<div class="alert alert-block alert-success alert-text-normal"><b>Warning:</b>
+<p>Minerals given in <code>MINERAL</code>
+cannot be more than 8 characters long! Use mineral nicknames (if
+possible) in such cases.</p>
+</div>
+<p>Initial conditions for the transported species are given with the
+<code>SBLK&lt;name&gt;</code> keyword, where <code>&lt;name&gt;</code>
+must be the same as given in <code>SPECIES</code>:</p>
+<pre><code>SOLUTION
+
+[...]
+
+SBLKCA
+    40*0.0    /
+SBLKH
+    40*1.0    /
+SBLKMG
+    40*0.0    /
+SBLKCL
+    40*0.0    /
+SBLKHCO3
+    40*0.0    /</code></pre>
+<p>We see that all species, except <code>H</code>, are initialized with
+zero concentration, since they will either be calculated from the
+minerals or injected in the wells.</p>
+<p>The initial conditions for the minerals are given in terms of weight
+fractions relative to the rock. Internally, the initial concentration of
+minerals and species are done during an initial equilibrium solve. The
+weight fractions are given in the <code>MBLK&lt;name&gt;</code> keyword,
+where <code>&lt;name&gt;</code> must be the same as given in
+<code>MINERAL</code>:</p>
+<pre><code>SOLUTION
+
+[...]
+
+MBLKCAL
+    40*0.005    /
+MBLKMGS
+    40*0.0    /</code></pre>
+<div class="alert alert-block alert-success alert-text-normal"><b>Note</b>
+<p>The weight percentage must sum to 1.0, hence
+any remaining weight percent that is not given in <code>MINERAL</code>
+is defined as a standard sandstone with a set density.</p>
+</div>
+<div class="alert alert-block alert-success alert-text-normal"><b>Warning:</b>
+<p>If the <code>&lt;name&gt;</code> of the
+mineral is more than 4 characters long, only the first four characters
+are used in <code>MBLK&lt;name&gt;</code> or
+<code>MVDP&lt;name&gt;</code>. This is due to the limitation that the
+total number of characters for a keyword in OPM Flow cannot be longer
+than 8 characters. An error will be given if the first four characters
+for two (or more) minerals are the same (e.g. magnesite and magnetite).
+Using nicknames for minerals, as in this tutorial, might be safest to
+avoid naming conflicts!</p>
+</div>
+<p>The in- and outflow of water (with aqueous species) are handled by
+standard well keywords (see <a
+href="https://opm-project.org/?page_id=955">OPM Flow manual</a>), but
+injection of calcium chloride is given by <code>WSPECIES</code> in the
+<code>SCHEDULE</code> section:</p>
+<pre><code>SCHEDULE
+
+[...]
+
+WSPECIES
+    INJ MG 0.2    /
+    INJ CL 0.4    /
+/</code></pre>
+<h2 id="run-simulation">Run simulation</h2>
+<p>The <a href="#opm-flow-deck">OPM Flow deck</a> is run using the
+<code>flow_onephase_geochemistry</code> binary with flags to limit time
+steps, due to explicit scheme for reactive transport, and output of
+geochemistry variables for visualization:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">flow_onephase_geochemistry</span> <span class="at">--enable-opm-rst-file</span><span class="op">=</span>true <span class="at">--solver-max-time-step-in-days</span><span class="op">=</span>2e-3 MG_CC.DATA</span></code></pre></div>
+<h2 id="simulation-results">Simulation results</h2>
+Video of the development of species concentrations and mineral
+concentration:
+<div data-align="center">
+<p><img src="./figures/core_flood.gif" width="800" align="bottom"></p>
+</div>
+<div data-align="center">
+<p><img src="./figures/core_flood_minerals.gif" width="800" align="bottom"></p>
+</div>
+Comparison of effluent aqueous species concentration between OPM Flow
+and GeoChemX:
+<div data-align="center">
+<p><img src="./figures/opm_geochemx_outflow_compare.png" width="800" align="bottom"></p>
+</div>
+<p><br></br></p>
+<div class="alert alert-block alert-success alert-text-normal"><b>Note</b>
+<p>Command line for running the <a
+href="./geochemx/mg_cc.dat">.dat file</a> with GeoChemX:</p>
+<pre><code>GeoChemX TRANSPORT mg_cc.dat</code></pre>
+<p>A file labeled <code>mg_ccOneDEff.out</code> contains effluent
+species concentrations and can be open in a CSV viewer, e.g. Excel.</p>
+</div>
