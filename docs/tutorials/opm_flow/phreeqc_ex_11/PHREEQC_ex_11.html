@@ -1,0 +1,230 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="DocOnce: https://github.com/doconce/doconce/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="PHREEQC Example 11 - Transport and Cation Exchange">
+<title>PHREEQC Example 11 - Transport and Cation Exchange</title>
+<!-- Bootstrap style: bootswatch_readable -->
+<!-- doconce format html main_transportII.do.txt --html_style=bootswatch_readable --html_output=transportII-readable --html_code_style=inherit -->
+<link href="https://netdna.bootstrapcdn.com/bootswatch/3.1.1/readable/bootstrap.min.css" rel="stylesheet">
+<!-- not necessary
+<link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+-->
+<style type="text/css">
+/* Let inline verbatim have the same color as the surroundings */
+code { color: inherit; background-color: transparent; }
+/* Add scrollbar to dropdown menus in bootstrap navigation bar */
+.dropdown-menu {
+   height: auto;
+   max-height: 400px;
+   overflow-x: hidden;
+}
+/* Adds an invisible element before each target to offset for the navigation
+   bar */
+.anchor::before {
+  content:"";
+  display:block;
+  height:64px;      /* fixed header height for style bootswatch_readable */
+  margin:-64px 0 0; /* negative fixed header height */
+}
+</style>
+</head>
+
+<h1 id="phreeqc-example-11---transport-and-cation-exchange">PHREEQC
+Example 11 - Transport and Cation Exchange</h1>
+<p>The following tutorial is based on Example 11 from the PHREEQC <a
+href="https://pubs.usgs.gov/publication/tm6A43">documentation</a>. The
+setup is a simple 1D core with initial sodium-potassium-nitrate in
+equilibrium with a cation exchanger. The core is flooded with calcium
+chloride from left to right, with calcium, potassium and sodium reacting
+with the exchanger at all times.</p>
+<div data-align="center">
+<p><img src="./figures/ex11_setup_figure.png" width="800" align="bottom"></p>
+</div>
+<p>The reactive transport simulation in OPM Flow is set up as a single
+phase, water flow with wells for in- and outflow of water with chemical
+species. Since the chemical species does not affect the properties of
+the fluid, this is in essence a tracer transport problem with local
+chemical equilibrium calculations.</p>
+<h2 id="opm-flow-input">OPM Flow input</h2>
+<p>We will only point out selected keywords necessary to set up the
+reactive transport, and refer to the <a
+href="https://opm-project.org/?page_id=955">OPM Flow manual</a> for
+other keywords encountered in the <a href="./opm/EX11.DATA">full
+deck</a>.</p>
+<p>The geochemical model is activated using the <code>GEOCHEM</code>
+keyword in the <code>RUNSPEC</code> section:</p>
+<pre><code>RUNSPEC
+
+[...]
+
+GEOCHEM
+    1* 1e-7 1e-8 CHARGE    /</code></pre>
+<p>The first item is a JSON file name for all inputs to the geochemical
+solver that are not passed through the deck (not needed in this
+example). The second and third item are material balance and pH
+convergence tolerances, while the forth item forces charge balance in
+the geochemical equilibrium solver.</p>
+<p>All transported species must be given in the <code>SPECIES</code>
+keyword in the <code>PROPS</code> section:</p>
+<pre><code>PROPS
+
+[...]
+
+SPECIES
+    CA CL K NO3 NA H    /</code></pre>
+<p>
+  The species are as follows:
+</p>
+
+<ul>
+  <li>
+    <code>CA</code>: calcium (Ca<sup>2+</sup>)
+  </li>
+  <li>
+    <code>CL</code>: chlorine (Cl<sup>-</sup>)
+  </li>
+  <li>
+    <code>K</code>: potassium (K<sup>+</sup>)
+  </li>
+  <li>
+    <code>NO3</code>: nitrate (NO<sup>-</sup><sub>3</sub>)
+  </li>
+  <li>
+    <code>NA</code>: sodium (Na<sup>+</sup>)
+  </li>
+  <li>
+    <code>H</code>: hydrogen (H<sup>+</sup>)
+  </li>
+</ul>
+<div class="alert alert-block alert-success alert-text-normal"><b>Note</b>
+<p><code>SPECIES</code> must contain all
+transported species encountered in the simulations! This also includes
+species that are implicitly present through, e.g., mineral
+precipitations/dissolution (as in the <a
+href="../mineral_interaction/magnesite_calcite_example.html">mineral
+reaction example</a>)! An error will be given if there are
+inconsistencies between OPM Flow deck species and internal geochemistry
+solver definitions. A full list of accepted basis species for the
+geochemistry solver can be found in the Appendix <a
+href="../../geochemx/solution/html/solution-readable.html">here</a>. To
+avoid possible formatting issues it is recommended to use nicknames for
+the species.</p>
+</div>
+<p>Similar to the species definition, the cation exchanger is defined in
+the <code>IONEX</code> keyword in the <code>PROPS</code> section:</p>
+<pre><code>PROPS
+
+[...]
+
+IONEX
+    X    /</code></pre>
+<div class="alert alert-block alert-success alert-text-normal"><b>Note</b>
+<p>A default name of <code>X</code> is hard-coded
+for an ion exchanger in the geochemical solver! For more information on
+the ion exchange in the geochemistry solver see <a
+href="../../geochemx/iexchange/html/iexchange-readable.html">here</a>.</p>
+</div>
+<p>The initial conditions for each species are given one at the time
+using the <code>SBLK&lt;name&gt;</code> keyword in the
+<code>SOLUTION</code> section, where <code>&lt;name&gt;</code> refers to
+names given in <code>SPECIES</code>:</p>
+<pre><code>SOLUTION
+
+[...]
+
+SBLKK
+    40*0.2e-3    /
+SBLKNO3
+    40*1.2e-3    /
+SBLKNA
+    40*1.0e-3    /
+SBLKH
+    40*1.0    /
+SBLKCA
+    40*0.0    /
+SBLKCL
+    40*0.0    /</code></pre>
+<p>Initial condition for the cation exchanger is given in similiar
+manner using the <code>IBLK&lt;name&gt;</code> keyword in the
+<code>SOLUTION</code> section, where <code>&lt;name&gt;</code> refers to
+the name given in <code>IONEX</code>:</p>
+<pre><code>SOLUTION
+
+[...]
+
+IBLKX
+    40*1.1e-3    /</code></pre>
+<div class="alert alert-block alert-success alert-text-normal"><b>Note</b>
+<p> Initial conditions for species and ion
+exchangers can also be given as concentration vs depth using
+<code>SVDP&lt;name&gt;</code> and <code>IVDP&lt;name&gt;</code>
+keywords, respecitively, also located in the <code>SOLUTION</code>
+section. For example, for potassium:</p>
+<pre><code>SVDPK
+--  concentration    depth
+    0.2e-3           100
+    0.2e-3           200    /</code></pre>
+<p>would give the same initial condition as given with
+<code>SBLKK</code> above.</p>
+</div>
+<div class="alert alert-block alert-success alert-text-normal"><b>Note</b>
+<p> <code>SUMMARY</code> keywords to get time
+series of species are currently defined using tracer monikers, see well
+tracer outputs in the <a href="https://opm-project.org/?page_id=955">OPM
+Flow manual</a>. For example, to get well production rate of calcium in
+a well named <code>PROD</code>, one would write in the
+<code>SUMMARY</code> section:</p>
+<pre><code>SUMMARY
+
+[...]
+
+WTPRCA
+    PROD    /</code></pre>
+</div>
+<p>The in- and outflow of water are handled by standard well keywords
+(see <a href="https://opm-project.org/?page_id=955">OPM Flow
+manual</a>), but injection of species such as calcium chloride is given
+by <code>WSPECIES</code> in the <code>SCHEDULE</code> section:</p>
+<pre><code>SCHEDULE
+
+[...]
+
+WSPECIES
+    INJ CA 0.6e-3    /
+    INJ CL 1.2e-3    /
+/</code></pre>
+<h2 id="run-simulation">Run simulation</h2>
+<p>The <a href="./opm/EX11.DATA">OPM Flow deck</a> is run using the
+<code>flow_onephase_geochemistry</code> binary with flags to limit time
+steps, due to explicit scheme for reactive transport, and output of
+geochemistry variables for visualization:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">flow_onephase_geochemistry</span> <span class="at">--enable-opm-rst-file</span><span class="op">=</span>true <span class="at">--solver-max-time-step-in-days</span><span class="op">=</span>2e-4 EX11.DATA</span></code></pre></div>
+<h2 id="simulation-results">Simulation results</h2>
+<p>The core flood experiment is run over a time intervall of 24 h =
+86400 s. A video of the time evolution for some of the species
+concentrations over the length of the core is shown here:</p>
+<div data-align="center">
+<p><img src="./figures/core_flood.gif" width="800" align="bottom"></p>
+</div>
+<p>When calcium chloride is injected into the core at the left side, the
+calcium, potassium and sodium reacts with the cation exchanger. Chlorine
+is an inert ion and will flow through the core affected only by
+advection.</p>
+<p>Time series of the simulation results at the effluent are compared to
+results running the 1D transport module of GeoChemX (.dat file located
+<a href="./geochemx/ex11.dat">here</a>). Both run explicit version the
+reactive transport equations and show good agreement in the results:</p>
+<div data-align="center">
+<p><img src="./figures/opm_geochemx_outflow_compare.png" width="800" align="bottom"></p>
+</div>
+<p><br></br></p>
+<div class="alert alert-block alert-success alert-text-normal"><b>Note</b>
+<p><Command line for running the .dat file with
+GeoChemX:</p>
+<pre><code>GeoChemX TRANSPORT ex11.dat</code></pre>
+<p>A file labeled <code>ex11OneDEff.out</code> contains effluent species
+concentrations and can be open in a CSV viewer, e.g. Excel.</p>
+</div>

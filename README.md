@@ -26,13 +26,13 @@ make
 
 ## Code documentation
 To build the in-code documentation, [Doxygen](https://www.doxygen.nl/index.html) must be installed. Build documentation
-with `make doc`. In the build folder, the code documentation will be located at `doc/doxygen` in html, latex and xml
+with `make doc`. In the build folder, the code documentation will be located at `docs/doxygen` in html, latex and xml
 format.
 
 ## OPM Flow interface
 The executables starting with the name `flow_` are OPM Flow simulators with interface to geochemistry solver.
 
-See [tutorials](#tutorials) for usage.
+See [tutorials section](#tutorials) for usage.
 
 ## GeoChemX
 The executable `GeoChemX` has two sub-programs `EQSOLVER` and `TRANSPORT` which invokes the equilibrium and 1D reactive
@@ -45,7 +45,7 @@ GeoChemX EQSOLVER <input-file>
 GeoChemX TRANSPORT <input-file>
 ```
 
-See [tutorials](#tutorials) for usage.
+See [tutorials section](#tutorials) for usage.
 
 ## Python
 A Python wrapper for `GeoChemX` can be found in [pyGeoChem](pyGeoChem). Follow this [README](pyGeoChem/README.md) to
@@ -56,7 +56,9 @@ An experimental Python binding to `EQSOLVER` using [pybind11](https://pybind11.r
 [here](python).
 
 ## Tutorials
-Tutorials can be found [here](doc/tutorials/).
+Tutorials can be found here:
+- [HTML version](https://opm.github.io/opm-geochemistry/)
+- [Notebook/Markdown version](./docs/tutorials/README.md)
 
 ## Optional dependencies
 For the `TRANSPORT` solver, it is possible to write time series files with the
