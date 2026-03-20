@@ -70,10 +70,15 @@ endmacro()
 
 macro(opm-geochemistry_targets_hook)
   # Generate flow_blackoil_geochemistry
-  add_library(moduleVersionGeochem OBJECT opm/simulators/utils/moduleVersion.cpp)
-  set_property(TARGET moduleVersionGeochem PROPERTY POSITION_INDEPENDENT_CODE ON)
+  opm_add_library(
+    TARGET
+      moduleVersionGeochem
+    TYPE
+      OBJECT
+    SOURCES
+      opm/simulators/utils/moduleVersion.cpp
+  )
   add_dependencies(moduleVersionGeochem opmgeochemistry)
-  opm_add_target_options(TARGET moduleVersionGeochem)
 
   opm_add_test(flow_blackoil_geochemistry
                ONLY_COMPILE

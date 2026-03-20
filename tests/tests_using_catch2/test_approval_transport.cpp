@@ -1,5 +1,9 @@
 #include "ApprovalTests.hpp"
+#if __has_include(<catch2/catch.hpp>)
 #include <catch2/catch.hpp>
+#else
+#include <catch2/catch_test_macros.hpp>
+#endif
 
 #include <fstream>
 #include <iostream>

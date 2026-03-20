@@ -41,10 +41,21 @@ set(CATCH2_SLOW_TESTS
 
 add_executable(catch2_tests catch2_main.cpp ${CATCH2_SOURCE_FILES} ${CATCH2_SLOW_TESTS})
 
+if(Catch2_VERSION VERSION_GREATER_EQUAL 3.0)
+  target_link_libraries(catch2_tests
+   PRIVATE
+     Catch2::Catch2WithMain
+  )
+else()
+  target_link_libraries(catch2_tests
+   PRIVATE
+     Catch2::Catch2
+  )
+endif()
+
 target_link_libraries(
     catch2_tests
     PRIVATE
-    Catch2::Catch2
     ApprovalTests::ApprovalTests
     opmgeochemistry
     EquilibriumTestCases
