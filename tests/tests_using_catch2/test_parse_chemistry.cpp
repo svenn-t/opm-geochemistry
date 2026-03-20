@@ -11,7 +11,11 @@
 //     However, the code does not work if we read "-H+" in isolation...
 //     [Luckily, we have likely never encountered the error in practice]
 //
+#if __has_include(<catch2/catch.hpp>)
 #include <catch2/catch.hpp>
+#else
+#include <catch2/catch_test_macros.hpp>
+#endif
 
 #include <opm/simulators/geochemistry/IO/ParseChemistry.hpp>
 
