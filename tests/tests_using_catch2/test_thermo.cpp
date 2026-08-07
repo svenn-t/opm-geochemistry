@@ -8,6 +8,7 @@
 #include <array>
 #include <cmath>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -143,6 +144,625 @@ TEST_CASE("Test calculation of saturation pressure for water")
     }
 }
 
+/* Reference values for regions 2 and 3 of IAPWS-97, Tables 15 and 33.
+ * For region 3 the paper tabulates (T, rho) inputs; the pressures below are the
+ * corresponding table values, so the returned density must reproduce rho. */
+struct WaterPropertiesHighTP
+{
+    double pressure_;     // Pa
+    double temperature_;  // K
+    int region_;
+    double v_;   // specific volume (m3/kg)
+    double h_;   // specific enthalpy (kJ/kg)
+    double u_;   // specific internal energy (kJ/kg)
+    double s_;   // specific entropy (kJ/kg/K)
+    double cp_;  // specific isobaric heat capacity (kJ/kg/K)
+    double w_;   // speed of sound (m/s)
+};
+
+TEST_CASE("Test calculation of water properties in IAPWS-97 region 2 (steam)")
+{
+    water water_props;
+
+    // Table 15 of IAPWS-97 paper
+    static constexpr std::array<WaterPropertiesHighTP, 3> reference_cases =
+    {{
+        { 0.0035e6, 300.0, 2, 0.394913866e2, 0.254991145e4, 0.241169160e4, 0.852238967e1, 0.191300162e1, 0.427920172e3 },
+        { 0.0035e6, 700.0, 2, 0.923015898e2, 0.333568375e4, 0.301262819e4, 0.101749996e2, 0.208141274e1, 0.644289068e3 },
+        { 30.0e6,   700.0, 2, 0.542946619e-2, 0.263149474e4, 0.246861076e4, 0.517540298e1, 0.103505092e2, 0.480386523e3 },
+    }};
+
+    for(const auto& ref_props: reference_cases)
+    {
+        water_props.gibbsIAPWS(ref_props.temperature_, ref_props.pressure_);
+
+        CHECK(water_props.region_ == ref_props.region_);
+        CHECK_THAT(water_props.v_, Catch::Matchers::WithinRel(ref_props.v_, 1.0e-8));
+        CHECK_THAT(1.0e-3*water_props.h_, Catch::Matchers::WithinAbs(ref_props.h_, abs_tolerance2_));
+        CHECK_THAT(1.0e-3*water_props.u_, Catch::Matchers::WithinAbs(ref_props.u_, abs_tolerance2_));
+        CHECK_THAT(1.0e-3*water_props.s_, Catch::Matchers::WithinAbs(ref_props.s_, abs_tolerance2_));
+        CHECK_THAT(1.0e-3*water_props.cp_, Catch::Matchers::WithinAbs(ref_props.cp_, abs_tolerance2_));
+        CHECK_THAT(water_props.w_, Catch::Matchers::WithinAbs(ref_props.w_, abs_tolerance2_));
+    }
+}
+
+TEST_CASE("Test calculation of water properties in IAPWS-97 region 3 (supercritical)")
+{
+    water water_props;
+
+    // Table 33 of IAPWS-97 paper: inputs there are (T, rho) = (650, 500), (650, 200)
+    // and (750, 500); the pressures below are the tabulated P(T, rho), so the
+    // density iteration has to recover rho.
+    static constexpr std::array<WaterPropertiesHighTP, 3> reference_cases =
+    {{
+        { 0.255837018e8, 650.0, 3, 1.0/500.0, 0.186343019e4, 0.181226279e4, 0.405427273e1, 0.138935717e2, 0.502005554e3 },
+        { 0.222930643e8, 650.0, 3, 1.0/200.0, 0.237512401e4, 0.226365868e4, 0.485438792e1, 0.446579342e2, 0.383444594e3 },
+        { 0.783095639e8, 750.0, 3, 1.0/500.0, 0.225868845e4, 0.210206932e4, 0.446971906e1, 0.634165359e1, 0.760696041e3 },
+    }};
+
+    for(const auto& ref_props: reference_cases)
+    {
+        water_props.gibbsIAPWS(ref_props.temperature_, ref_props.pressure_);
+
+        CHECK(water_props.region_ == ref_props.region_);
+        CHECK_THAT(water_props.v_, Catch::Matchers::WithinRel(ref_props.v_, 1.0e-6));
+        CHECK_THAT(1.0e-3*water_props.h_, Catch::Matchers::WithinAbs(ref_props.h_, abs_tolerance2_));
+        CHECK_THAT(1.0e-3*water_props.u_, Catch::Matchers::WithinAbs(ref_props.u_, abs_tolerance2_));
+        CHECK_THAT(1.0e-3*water_props.s_, Catch::Matchers::WithinAbs(ref_props.s_, abs_tolerance2_));
+        CHECK_THAT(1.0e-3*water_props.cp_, Catch::Matchers::WithinAbs(ref_props.cp_, 1.0e-3));
+        CHECK_THAT(water_props.w_, Catch::Matchers::WithinAbs(ref_props.w_, 1.0e-3));
+    }
+}
+
+TEST_CASE("Test IAPWS-97 region boundaries and dispatch")
+{
+    water water_props;
+
+    // B23 boundary verification pair from the IAPWS-97 paper (below Eq. 6):
+    // T = 623.15 K <-> P = 16.5291643 MPa
+    CHECK_THAT(1.0e-6*water::PB23IAPWS(623.15), Catch::Matchers::WithinAbs(16.5291643, 1.0e-6));
+
+    // Region 1 (liquid) just below saturation temperature, steam just below Psat
+    water_props.gibbsIAPWS(600.0, 15.0e6);
+    CHECK(water_props.region_ == 1);
+    water_props.gibbsIAPWS(600.0, 10.0e6);  // Psat(600) = 12.34 MPa
+    CHECK(water_props.region_ == 2);
+    water_props.gibbsIAPWS(900.0, 50.0e6);  // high-T steam, above B23 range
+    CHECK(water_props.region_ == 2);
+
+    // Property continuity across the region 1/3 boundary (T = 623.15 K isotherm).
+    // IAPWS-97 guarantees consistency to within ~0.05% in v at the boundaries;
+    // test with a slightly looser tolerance.
+    water water_r1;
+    water water_r3;
+    water_r1.gibbsIAPWS(623.15, 50.0e6);
+    CHECK(water_r1.region_ == 1);
+    water_r3.gibbsIAPWS(623.16, 50.0e6);
+    CHECK(water_r3.region_ == 3);
+    CHECK_THAT(water_r3.v_, Catch::Matchers::WithinRel(water_r1.v_, 5.0e-3));
+    CHECK_THAT(water_r3.h_, Catch::Matchers::WithinRel(water_r1.h_, 5.0e-3));
+    CHECK_THAT(water_r3.s_, Catch::Matchers::WithinRel(water_r1.s_, 5.0e-3));
+    CHECK_THAT(water_r3.alpha_, Catch::Matchers::WithinRel(water_r1.alpha_, 2.0e-2));
+    CHECK_THAT(water_r3.beta_, Catch::Matchers::WithinRel(water_r1.beta_, 2.0e-2));
+
+    // Property continuity across the region 2/3 (B23) boundary at 700 K
+    const double PB23_700 = water::PB23IAPWS(700.0);
+    water water_r2;
+    water_r2.gibbsIAPWS(700.0, 0.999*PB23_700);
+    CHECK(water_r2.region_ == 2);
+    water_r3.gibbsIAPWS(700.0, 1.001*PB23_700);
+    CHECK(water_r3.region_ == 3);
+    CHECK_THAT(water_r3.v_, Catch::Matchers::WithinRel(water_r2.v_, 2.0e-2));
+    CHECK_THAT(water_r3.h_, Catch::Matchers::WithinRel(water_r2.h_, 2.0e-2));
+    CHECK_THAT(water_r3.s_, Catch::Matchers::WithinRel(water_r2.s_, 2.0e-2));
+}
+
+TEST_CASE("Test water properties above 100 MPa with IAPWS-95")
+{
+    water water_props;
+
+    // Single-phase reference states from Table 7 of the IAPWS-95 release
+    // (Wagner & Pruss 2002, Table 6.6): inputs there are (T, rho); the
+    // pressures below are the tabulated P(T, rho), so the density iteration
+    // has to recover rho. Only the 700 MPa states exceed the IAPWS-97 range
+    // and are reachable through the (T, P) interface.
+    struct Iapws95Reference
+    {
+        double pressure_;     // Pa
+        double temperature_;  // K
+        double rho_;  // density (kg/m3)
+        double cv_;   // specific isochoric heat capacity (kJ/kg/K)
+        double w_;    // speed of sound (m/s)
+        double s_;    // specific entropy (kJ/kg/K)
+    };
+
+    static constexpr std::array<Iapws95Reference, 3> reference_cases =
+    {{
+        { 0.700004704e9, 300.0, 0.1188202e4, 0.346135580e1, 0.244357992e4, 0.132609616 },
+        { 0.700000405e9, 500.0, 0.1084564e4, 0.307437693e1, 0.241200877e4, 0.203237509e1 },
+        { 0.700000006e9, 900.0, 0.8707690e3, 0.266422350e1, 0.201933608e4, 0.417223802e1 },
+    }};
+
+    for(const auto& ref_props: reference_cases)
+    {
+        water_props.gibbsIAPWS(ref_props.temperature_, ref_props.pressure_);
+
+        CHECK(water_props.region_ == 95);
+        CHECK_THAT(water_props.denst_, Catch::Matchers::WithinRel(ref_props.rho_, 1.0e-6));
+        CHECK_THAT(1.0e-3*water_props.cv_, Catch::Matchers::WithinAbs(ref_props.cv_, abs_tolerance2_));
+        CHECK_THAT(water_props.w_, Catch::Matchers::WithinAbs(ref_props.w_, 1.0e-3));
+        CHECK_THAT(1.0e-3*water_props.s_, Catch::Matchers::WithinAbs(ref_props.s_, 1.0e-6));
+    }
+
+    // Continuity across the 100 MPa seam between IAPWS-97 and IAPWS-95
+    // (IAPWS-97 was fitted to IAPWS-95; consistency is a few 0.01%).
+    water water_97;
+    water water_95;
+
+    water_97.gibbsIAPWS(500.0, 99.99e6);  // region 1 side
+    CHECK(water_97.region_ == 1);
+    water_95.gibbsIAPWS(500.0, 100.01e6);
+    CHECK(water_95.region_ == 95);
+    CHECK_THAT(water_95.v_, Catch::Matchers::WithinRel(water_97.v_, 2.0e-3));
+    CHECK_THAT(water_95.h_, Catch::Matchers::WithinRel(water_97.h_, 2.0e-3));
+    CHECK_THAT(water_95.s_, Catch::Matchers::WithinRel(water_97.s_, 2.0e-3));
+    CHECK_THAT(water_95.alpha_, Catch::Matchers::WithinRel(water_97.alpha_, 1.0e-2));
+    CHECK_THAT(water_95.beta_, Catch::Matchers::WithinRel(water_97.beta_, 1.0e-2));
+
+    water_97.gibbsIAPWS(650.0, 99.99e6);  // region 3 side (exercises the near-critical terms)
+    CHECK(water_97.region_ == 3);
+    water_95.gibbsIAPWS(650.0, 100.01e6);
+    CHECK(water_95.region_ == 95);
+    CHECK_THAT(water_95.v_, Catch::Matchers::WithinRel(water_97.v_, 2.0e-3));
+    CHECK_THAT(water_95.h_, Catch::Matchers::WithinRel(water_97.h_, 2.0e-3));
+    CHECK_THAT(water_95.s_, Catch::Matchers::WithinRel(water_97.s_, 2.0e-3));
+
+    water_97.gibbsIAPWS(1000.0, 99.99e6);  // region 2 side
+    CHECK(water_97.region_ == 2);
+    water_95.gibbsIAPWS(1000.0, 100.01e6);
+    CHECK(water_95.region_ == 95);
+    CHECK_THAT(water_95.v_, Catch::Matchers::WithinRel(water_97.v_, 2.0e-3));
+    CHECK_THAT(water_95.h_, Catch::Matchers::WithinRel(water_97.h_, 2.0e-3));
+    CHECK_THAT(water_95.s_, Catch::Matchers::WithinRel(water_97.s_, 2.0e-3));
+}
+
+TEST_CASE("Water density derivatives are consistent across EOS regions")
+{
+    struct EosState
+    {
+        const char* name;
+        double temperature;  // K
+        double pressure;     // Pa
+        int expected_region;
+    };
+
+    static constexpr std::array<EosState, 4> states =
+    {{
+        { "region 1", 473.15, 50.0e6, 1 },
+        { "region 2", 673.15, 20.0e6, 2 },
+        { "region 3", 673.15, 90.0e6, 3 },
+        { "IAPWS-95", 673.15, 300.0e6, 95 },
+    }};
+
+    static constexpr double temperature_step = 0.05;  // K
+    static constexpr double pressure_step = 1.0e4;    // Pa
+
+    for (const auto& state : states)
+    {
+        CAPTURE(state.name, state.temperature, state.pressure);
+
+        water base;
+        water temperature_plus;
+        water temperature_minus;
+        water pressure_plus;
+        water pressure_minus;
+
+        base.gibbsIAPWS(state.temperature, state.pressure);
+        temperature_plus.gibbsIAPWS(state.temperature + temperature_step, state.pressure);
+        temperature_minus.gibbsIAPWS(state.temperature - temperature_step, state.pressure);
+        pressure_plus.gibbsIAPWS(state.temperature, state.pressure + pressure_step);
+        pressure_minus.gibbsIAPWS(state.temperature, state.pressure - pressure_step);
+
+        REQUIRE(base.region_ == state.expected_region);
+
+        const double alpha_numerical =
+            -(temperature_plus.denst_ - temperature_minus.denst_)
+            / (2.0 * temperature_step * base.denst_);
+        const double beta_numerical =
+            (pressure_plus.denst_ - pressure_minus.denst_)
+            / (2.0 * pressure_step * base.denst_);
+        const double alpha_t_numerical =
+            (temperature_plus.alpha_ - temperature_minus.alpha_)
+            / (2.0 * temperature_step);
+
+        CHECK_THAT(base.alpha_, Catch::Matchers::WithinRel(alpha_numerical, 2.0e-5));
+        CHECK_THAT(base.beta_, Catch::Matchers::WithinRel(beta_numerical, 2.0e-5));
+        CHECK_THAT(base.alpha_t_, Catch::Matchers::WithinRel(alpha_t_numerical, 2.0e-3));
+    }
+}
+
+TEST_CASE("Johnson-Norton dielectric derivatives are consistent across EOS regions")
+{
+    struct EosState
+    {
+        const char* name;
+        double temperature;  // K
+        double pressure;     // Pa
+        int expected_region;
+    };
+
+    struct DielectricProperties
+    {
+        double epsilon;
+        double epsilon_t;
+        double epsilon_tt;
+        double epsilon_p;
+        int region;
+    };
+
+    const auto evaluate_dielectric = [](double temperature, double pressure)
+    {
+        water water_props;
+        eps_JN dielectric(&water_props);
+        dielectric.permittivity_TP(temperature, pressure);
+
+        return DielectricProperties{
+            dielectric.permittivity_,
+            dielectric.permittivity_T_,
+            dielectric.permittivity_TT_,
+            dielectric.permittivity_P_,
+            water_props.region_
+        };
+    };
+
+    static constexpr std::array<EosState, 4> states =
+    {{
+        { "region 1", 473.15, 50.0e6, 1 },
+        { "region 2", 673.15, 20.0e6, 2 },
+        { "region 3", 673.15, 90.0e6, 3 },
+        { "IAPWS-95", 673.15, 300.0e6, 95 },
+    }};
+
+    static constexpr double temperature_step = 0.1;  // K
+    static constexpr double pressure_step = 1.0e4;    // Pa
+
+    for (const auto& state : states)
+    {
+        CAPTURE(state.name, state.temperature, state.pressure);
+
+        const auto base = evaluate_dielectric(state.temperature, state.pressure);
+        const auto temperature_plus =
+            evaluate_dielectric(state.temperature + temperature_step, state.pressure);
+        const auto temperature_minus =
+            evaluate_dielectric(state.temperature - temperature_step, state.pressure);
+        const auto pressure_plus =
+            evaluate_dielectric(state.temperature, state.pressure + pressure_step);
+        const auto pressure_minus =
+            evaluate_dielectric(state.temperature, state.pressure - pressure_step);
+
+        REQUIRE(base.region == state.expected_region);
+
+        const double epsilon_t_numerical =
+            (temperature_plus.epsilon - temperature_minus.epsilon)
+            / (2.0 * temperature_step);
+        const double epsilon_tt_numerical =
+            (temperature_plus.epsilon + temperature_minus.epsilon - 2.0 * base.epsilon)
+            / (temperature_step * temperature_step);
+        const double epsilon_p_numerical =
+            (pressure_plus.epsilon - pressure_minus.epsilon)
+            / (2.0 * pressure_step);
+
+        CHECK_THAT(base.epsilon_t, Catch::Matchers::WithinRel(epsilon_t_numerical, 2.0e-4));
+        CHECK_THAT(base.epsilon_tt, Catch::Matchers::WithinRel(epsilon_tt_numerical, 2.0e-3));
+        CHECK_THAT(base.epsilon_p, Catch::Matchers::WithinRel(epsilon_p_numerical, 2.0e-4));
+    }
+}
+
+TEST_CASE("Born derivatives are consistent across EOS regions")
+{
+    struct EosState
+    {
+        const char* name;
+        double temperature;  // K
+        double pressure;     // Pa
+        int expected_region;
+    };
+
+    struct BornProperties
+    {
+        double omega;
+        double omega_t;
+        double omega_tt;
+        double omega_p;  // J/mol/bar
+        int region;
+    };
+
+    const auto evaluate_born = [](double temperature, double pressure)
+    {
+        water water_props;
+        water_props.gibbsIAPWS(temperature, pressure);
+
+        ions ion_props(&water_props);
+        ion_props.born_df(temperature, pressure);
+
+        double reference_radius = 3.0;
+        BornProperties properties{};
+        ion_props.born(1.0,
+                       reference_radius,
+                       properties.omega,
+                       properties.omega_t,
+                       properties.omega_tt,
+                       properties.omega_p);
+        properties.region = water_props.region_;
+        return properties;
+    };
+
+    static constexpr std::array<EosState, 4> states =
+    {{
+        { "region 1", 473.15, 50.0e6, 1 },
+        { "region 2", 673.15, 20.0e6, 2 },
+        { "region 3", 673.15, 90.0e6, 3 },
+        { "IAPWS-95", 673.15, 300.0e6, 95 },
+    }};
+
+    static constexpr double temperature_step = 0.1;  // K
+    static constexpr double pressure_step_bar = 0.1;
+    static constexpr double pascal_per_bar = 1.0e5;
+
+    for (const auto& state : states)
+    {
+        CAPTURE(state.name, state.temperature, state.pressure);
+
+        const auto base = evaluate_born(state.temperature, state.pressure);
+        const auto temperature_plus =
+            evaluate_born(state.temperature + temperature_step, state.pressure);
+        const auto temperature_minus =
+            evaluate_born(state.temperature - temperature_step, state.pressure);
+        const auto pressure_plus =
+            evaluate_born(state.temperature,
+                          state.pressure + pressure_step_bar * pascal_per_bar);
+        const auto pressure_minus =
+            evaluate_born(state.temperature,
+                          state.pressure - pressure_step_bar * pascal_per_bar);
+
+        REQUIRE(base.region == state.expected_region);
+
+        const double omega_t_numerical =
+            (temperature_plus.omega - temperature_minus.omega)
+            / (2.0 * temperature_step);
+        const double omega_tt_numerical =
+            (temperature_plus.omega + temperature_minus.omega - 2.0 * base.omega)
+            / (temperature_step * temperature_step);
+        const double omega_p_numerical =
+            (pressure_plus.omega - pressure_minus.omega)
+            / (2.0 * pressure_step_bar);
+
+        CHECK_THAT(base.omega_t, Catch::Matchers::WithinRel(omega_t_numerical, 2.0e-4));
+        CHECK_THAT(base.omega_tt, Catch::Matchers::WithinRel(omega_tt_numerical, 2.0e-3));
+        CHECK_THAT(base.omega_p, Catch::Matchers::WithinRel(omega_p_numerical, 2.0e-4));
+    }
+}
+
+TEST_CASE("HKF ion molal volume is the pressure derivative of Gibbs energy")
+{
+    struct State
+    {
+        const char* name;
+        double temperature_celsius;
+        double pressure_bar;
+    };
+
+    static constexpr std::array<State, 2> states =
+    {{
+        { "region 1", 200.0, 500.0 },
+        { "IAPWS-95", 400.0, 3000.0 },
+    }};
+
+    static constexpr double pressure_step_bar = 0.5;
+    ThermoTableCalculator calculator;
+
+    for (const auto& state : states)
+    {
+        CAPTURE(state.name, state.temperature_celsius, state.pressure_bar);
+
+        const auto base = calculator.evaluate(
+            "Na+", {state.temperature_celsius}, {state.pressure_bar});
+        const auto pressure_plus = calculator.evaluate(
+            "Na+", {state.temperature_celsius}, {state.pressure_bar + pressure_step_bar});
+        const auto pressure_minus = calculator.evaluate(
+            "Na+", {state.temperature_celsius}, {state.pressure_bar - pressure_step_bar});
+
+        REQUIRE(base.size() == 1);
+        REQUIRE(pressure_plus.size() == 1);
+        REQUIRE(pressure_minus.size() == 1);
+
+        // dG/dP in J/(mol bar) converts to cm3/mol with a factor of 10.
+        const double volume_numerical =
+            10.0 * (pressure_plus.front().G - pressure_minus.front().G)
+            / (2.0 * pressure_step_bar);
+
+        CHECK_THAT(base.front().V, Catch::Matchers::WithinRel(volume_numerical, 5.0e-4));
+    }
+}
+
+TEST_CASE("Scalar and bulk HKF ion properties use the same molal volume")
+{
+    static constexpr std::size_t species_count = 2;
+    static constexpr double temperature = 473.15;
+    static constexpr double pressure = 50.0e6;
+
+    std::array<double, species_count> G_ref{{-2.0e5, -1.0e5}};
+    std::array<double, species_count> H_ref{{-1.8e5, -0.8e5}};
+    std::array<double, species_count> S_ref{{50.0, 30.0}};
+    std::array<double, species_count> a1{{4.0, 2.0}};
+    std::array<double, species_count> a2{{100.0, 80.0}};
+    std::array<double, species_count> a3{{20.0, 10.0}};
+    std::array<double, species_count> a4{{500.0, 300.0}};
+    std::array<double, species_count> c1{{40.0, 30.0}};
+    std::array<double, species_count> c2{{2.0e4, 1.0e4}};
+    std::array<double, species_count> omega{{1.0e5, 2.0e4}};
+    std::array<double, species_count> charge{{1.0, 0.0}};
+    std::array<double, species_count> reference_radius{{3.0, 0.0}};
+
+    std::array<StandardStateProperties, species_count> scalar_properties;
+    hkf scalar_hkf;
+    for (std::size_t i = 0; i < species_count; ++i)
+    {
+        scalar_properties[i] = scalar_hkf.ionProperties(
+            temperature, pressure, G_ref[i], H_ref[i], S_ref[i],
+            a1[i], a2[i], a3[i], a4[i], c1[i], c2[i],
+            omega[i], charge[i], reference_radius[i]);
+    }
+
+    std::array<double, species_count> bulk_G{};
+    std::array<double, species_count> bulk_volume{};
+    hkf bulk_hkf;
+    bulk_hkf.dGIons(
+        temperature, pressure, G_ref.data(), S_ref.data(),
+        a1.data(), a2.data(), a3.data(), a4.data(), c1.data(), c2.data(),
+        omega.data(), charge.data(), reference_radius.data(),
+        static_cast<int>(species_count), -1, bulk_G.data(), bulk_volume.data());
+
+    for (std::size_t i = 0; i < species_count; ++i)
+    {
+        CAPTURE(i);
+        CHECK_THAT(bulk_G[i],
+                   Catch::Matchers::WithinAbs(scalar_properties[i].G, 1.0e-9));
+        CHECK_THAT(bulk_volume[i],
+                   Catch::Matchers::WithinAbs(scalar_properties[i].V, 1.0e-12));
+    }
+}
+
+TEST_CASE("HKF pure-water properties allow steam while aqueous species reject it")
+{
+    hkf hkf_props;
+
+    // 150 C at 1 bar is steam (Psat = 4.76 bar). Pure-water properties remain
+    // available, while the public dielectric value explicitly marks the state
+    // as outside the aqueous model.
+    hkf_props.WaterProp(423.15, 1.0e5);
+    CHECK(hkf_props.rhow_ < 1.0);
+    CHECK(std::isnan(hkf_props.epsw_));
+    CHECK(std::isfinite(hkf_props.G_));
+    CHECK(std::isfinite(hkf_props.H_));
+    CHECK(std::isfinite(hkf_props.S_));
+    CHECK(std::isfinite(hkf_props.V_));
+    CHECK(std::isfinite(hkf_props.Cp_));
+
+    // The same temperature above saturation restores the dielectric state.
+    hkf_props.WaterProp(423.15, 1.0e6);
+    CHECK(hkf_props.rhow_ > 900.0);
+    CHECK(std::isfinite(hkf_props.epsw_));
+
+    ThermoTableCalculator calculator;
+    const auto water_rows = calculator.evaluate("H2O", {150.0}, {1.0});
+    REQUIRE(water_rows.size() == 1);
+    CHECK(water_rows.front().rho < 0.001);
+    CHECK(std::isfinite(water_rows.front().G));
+
+    CHECK_THROWS_AS(calculator.evaluate("Na+", {150.0}, {1.0}), std::domain_error);
+}
+
+TEST_CASE("HKF charged-species properties enforce their density and temperature limits")
+{
+    ThermoTableCalculator calculator;
+
+    // The low-pressure complete-property limit is inclusive at 350 C.
+    const auto at_temperature_limit = calculator.evaluate("Na+", {350.0}, {999.0});
+    REQUIRE(at_temperature_limit.size() == 1);
+    CHECK_THAT(at_temperature_limit.front().Cp, Catch::Matchers::WithinAbs(46.32840, 5.0e-4));
+    CHECK_THROWS_AS(calculator.evaluate("Na+", {350.01}, {999.0}), std::domain_error);
+
+    // At exactly 1 kbar the low-pressure temperature restriction no longer
+    // applies, but the minimum density requirement still does.
+    CHECK_THROWS_AS(calculator.evaluate("Na+", {626.85}, {1000.0}), std::domain_error);
+
+    const auto high_pressure = calculator.evaluate("Na+",
+                                                   {400.0, 400.0, 400.0},
+                                                   {1000.0, 3000.0, 7000.0});
+    REQUIRE(high_pressure.size() == 3);
+    for (const auto& row : high_pressure)
+    {
+        CHECK(std::isfinite(row.logK));
+        CHECK(std::isfinite(row.G));
+        CHECK(std::isfinite(row.H));
+        CHECK(std::isfinite(row.S));
+        CHECK(std::isfinite(row.V));
+        CHECK(std::isfinite(row.Cp));
+        CHECK(std::abs(row.V) < 100.0);
+        CHECK(std::abs(row.Cp) < 200.0);
+    }
+
+    // These points pin f=0 at and above 1 kbar. Before the domain fix, the
+    // exact boundary was singular and the 3 kbar derivatives were extreme.
+    CHECK_THAT(high_pressure[0].V, Catch::Matchers::WithinAbs(-5.68278, 5.0e-4));
+    CHECK_THAT(high_pressure[0].Cp, Catch::Matchers::WithinAbs(46.75311, 5.0e-4));
+    CHECK_THAT(high_pressure[1].V, Catch::Matchers::WithinAbs(1.00869, 5.0e-4));
+    CHECK_THAT(high_pressure[1].Cp, Catch::Matchers::WithinAbs(55.46261, 5.0e-4));
+
+    // The bulk solver path applies the same charged-species guard.
+    std::array<double, 1> zero{};
+    std::array<double, 1> charge{1.0};
+    std::array<double, 1> dG{};
+    std::array<double, 1> molar_volume{};
+    hkf bulk_hkf;
+    CHECK_THROWS_AS(
+        bulk_hkf.dGIons(623.16, 99.9e6,
+                        zero.data(), zero.data(),
+                        zero.data(), zero.data(), zero.data(), zero.data(),
+                        zero.data(), zero.data(),
+                        zero.data(), charge.data(), zero.data(), 1, -1,
+                        dG.data(), molar_volume.data()),
+        std::domain_error);
+}
+
+TEST_CASE("Region 3 alpha_t is consistent and stays on one branch near saturation")
+{
+    static constexpr double T = 630.0;
+    const double Psat = water::PsatIAPWS(T);
+
+    // Validate alpha_t_ against a coarse finite difference of alpha_ at a
+    // pressure safely above the saturation line (all probes liquid).
+    water water_props;
+    water_props.gibbsIAPWS(T, Psat + 5.0e5);
+    CHECK(water_props.region_ == 3);
+    const double alpha_t_ref = water_props.alpha_t_;
+
+    water water_plus;
+    water water_minus;
+    water_plus.gibbsIAPWS(T + 0.5, Psat + 5.0e5);
+    water_minus.gibbsIAPWS(T - 0.5, Psat + 5.0e5);
+    const double alpha_t_fd = (water_plus.alpha_ - water_minus.alpha_) / 1.0;
+    CHECK_THAT(alpha_t_ref, Catch::Matchers::WithinRel(alpha_t_fd, 0.15));
+
+    // Within one finite-difference step of the saturation line
+    // (dPsat/dT ~ 0.35 MPa/K, probe dT = 0.01 K): the internal probes must
+    // stay on the liquid branch instead of flipping to the vapour root,
+    // which would produce a wildly wrong derivative.
+    water_props.gibbsIAPWS(T, Psat + 2.0e3);
+    CHECK(water_props.denst_ > 500.0);  // liquid branch
+    CHECK(std::isfinite(water_props.alpha_t_));
+    CHECK(water_props.alpha_t_*alpha_t_ref > 0.0);  // same sign
+    CHECK(std::fabs(water_props.alpha_t_) < 20.0*std::fabs(alpha_t_ref));
+}
+
+TEST_CASE("Test IAPWS-97 out-of-range conditions raise exceptions")
+{
+    water water_props;
+
+    CHECK_THROWS_AS(water_props.gibbsIAPWS(200.0, 1.0e6), std::domain_error);    // too cold
+    CHECK_THROWS_AS(water_props.gibbsIAPWS(1200.0, 1.0e6), std::domain_error);   // region 5
+    CHECK_THROWS_AS(water_props.gibbsIAPWS(400.0, 1500.0e6), std::domain_error); // above 1000 MPa
+    CHECK_THROWS_AS(water_props.gibbsIAPWS(400.0, -1.0e6), std::domain_error);   // negative P
+    CHECK_THROWS_AS(water::PsatIAPWS(700.0), std::domain_error);                 // above Tcrit
+
+    // A failed call must not poison the (T, P) cache: a subsequent valid call
+    // at the previously failing temperature has to be evaluated properly.
+    water_props.gibbsIAPWS(400.0, 1.0e6);
+    CHECK(water_props.region_ == 1);  // liquid: P > Psat(400 K) = 0.246 MPa
+    CHECK(water_props.v_ > 0.0);
+}
+
 TEST_CASE("Test HKF standard-state water properties")
 {
     hkf hkf_props;
@@ -202,6 +822,9 @@ TEST_CASE("Thermo table calculator formats table output")
     CHECK(table.find("   2   50.00") != std::string::npos);
     CHECK(table.find("75.33810") != std::string::npos);
     CHECK(table.find("75.29589") != std::string::npos);
+
+    const auto high_pressure_table = calculator.evaluateFormatted("Na+", {400.0}, {1000.0});
+    CHECK(high_pressure_table.find("400.00 1000.000000") != std::string::npos);
 }
 
 TEST_CASE("Thermo table calculator exposes direct IAPWS water saturation pressure")
@@ -229,7 +852,11 @@ TEST_CASE("Thermo table calculator reproduces HKF basis species reference data")
     CHECK_THAT(row.G, Catch::Matchers::WithinAbs(-62591.0*UnitConversionFactors::cal2J_, abs_tolerance2_));
     CHECK_THAT(row.H, Catch::Matchers::WithinAbs(-57433.0*UnitConversionFactors::cal2J_, abs_tolerance2_));
     CHECK_THAT(row.S, Catch::Matchers::WithinAbs(13.96*UnitConversionFactors::cal2J_, abs_tolerance2_));
-    CHECK_THAT(row.V, Catch::Matchers::WithinAbs(-1206.704398355, 1.0e-6));
+    // V from the HKF a-parameters and the Born Q term, in cm^3/mol (approx.
+    // -1.1 in SUPCRT92; the difference comes from the Johnson-Norton
+    // dielectric model used here). The pre-2025-07 reference value -1206.7
+    // reflected a unit error (factor 1000) in hkf::ionProperties.
+    CHECK_THAT(row.V, Catch::Matchers::WithinAbs(-1.2067361105, 1.0e-6));
     CHECK_THAT(row.Cp, Catch::Matchers::WithinAbs(38.1192278706, 1.0e-4));
 }
 
@@ -267,14 +894,17 @@ TEST_CASE("Thermo table calculator reproduces HKF gas reference data")
 TEST_CASE("Thermo table calculator derives H2O,g logK from IAPWS saturation pressure")
 {
     ThermoTableCalculator calculator;
-    const auto rows = calculator.evaluate("H2O,g", {25.0}, {1.0});
+    const auto rows = calculator.evaluate("H2O,g", {25.0, 150.0}, {1.0});
 
-    REQUIRE(rows.size() == 1);
-    const auto& row = rows.front();
+    REQUIRE(rows.size() == 2);
 
-    const double expected_logK = std::log10(PhysicalConstants::standard_gas_pressure / water::PsatIAPWS(298.15));
-    CHECK_THAT(row.logK, Catch::Matchers::WithinAbs(expected_logK, 1.0e-10));
-    CHECK_THAT(row.logK, Catch::Matchers::WithinAbs(1.49897, 1.0e-4));
+    const double expected_logK_25 = std::log10(PhysicalConstants::standard_gas_pressure / water::PsatIAPWS(298.15));
+    CHECK_THAT(rows[0].logK, Catch::Matchers::WithinAbs(expected_logK_25, 1.0e-10));
+    CHECK_THAT(rows[0].logK, Catch::Matchers::WithinAbs(1.49897, 1.0e-4));
+
+    const double expected_logK_150 = std::log10(PhysicalConstants::standard_gas_pressure / water::PsatIAPWS(423.15));
+    CHECK_THAT(rows[1].logK, Catch::Matchers::WithinAbs(expected_logK_150, 1.0e-10));
+    CHECK(rows[1].rho < 0.001);
 }
 
 TEST_CASE("Thermo table standalone solver reads debug input")
@@ -305,4 +935,31 @@ IncludeIndex 1
     CHECK(output.find("   2   50.00") != std::string::npos);
     CHECK(output.find("18.06863") != std::string::npos);
     CHECK(output.find("36.93400") != std::string::npos);
+}
+
+TEST_CASE("Thermo table standalone solver skips Psat above the critical point")
+{
+    const std::string input = R"(SPECIESLIST
+H2O
+/ end
+TEMPS
+25.0 400.0
+/ end
+PRESSURES
+250.0
+/ end
+TempUnit C
+PresUnit bar
+IncludeIndex 1
+)";
+
+    std::istringstream input_stream(input);
+    ThermoTableSolver solver;
+    const auto output = solver.solve("thermotable_supercritical", input_stream);
+
+    CHECK(output.find("   2  400.00") != std::string::npos);
+
+    const auto psat_section = output.find("IAPWS97_PSAT_H2O");
+    REQUIRE(psat_section != std::string::npos);
+    CHECK(output.find("400.00", psat_section) == std::string::npos);
 }
