@@ -1,7 +1,5 @@
-// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-// vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright 2025 Equinor ASA.
+  Copyright 2026 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -18,34 +16,38 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef VTK_GEOCHEMISTRY_PARAMS_HPP
-#define VTK_GEOCHEMISTRY_PARAMS_HPP
+#ifndef GEOCHEMISTRY_MODEL_PARAMETERS_HPP
+#define GEOCHEMISTRY_MODEL_PARAMETERS_HPP
 
-namespace Opm::Parameters {
+namespace Opm::Parameters
+{
 
-// set default values for what quantities to output
-struct VtkWriteSpeciesConcentration { static constexpr bool value = true; };
-struct VtkWriteMineralConcentration { static constexpr bool value = true; };
+//! Target Courant number of the substeps of the explicit reactive transport
+template <class Scalar>
+struct GeochemistryTargetCfl
+{
+    static constexpr Scalar value = 1.0;
+};
 
 } // namespace Opm::Parameters
 
-namespace Opm {
-
-struct VtkGeochemistryParams
+namespace Opm
 {
-    /*!
-    * @brief Register runtime parameters
-    */
+
+/// Parameters of the geochemistry model
+template <class Scalar>
+struct GeochemistryModelParameters
+{
+    /// Read the runtime parameters, which must have been registered
+    GeochemistryModelParameters();
+
+    /// Register the runtime parameters
     static void registerParameters();
 
-    /*!
-    * @brief Read runtime parameters
-    */
-    void read();
-
-    bool speciesConcentrationOutput_;
-    bool mineralConcentrationOutput_;
+    /// Target Courant number of the substeps of the explicit reactive transport
+    Scalar target_cfl_;
 };
 
 } // namespace Opm
+
 #endif

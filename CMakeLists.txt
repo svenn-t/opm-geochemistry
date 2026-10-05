@@ -19,9 +19,6 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules")
 include(GNUInstallDirs)
 include(CMakeLists_files.cmake)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Other options
 option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
 option(BUILD_PYTHON "Attempt to build Python package?" OFF)
@@ -34,6 +31,15 @@ else()
 endif()
 option(BUILD_STANDALONE "Build the standalone geochemistry library and tools?" ${_BUILD_STANDALONE_DEFAULT})
 option(ENABLE_OPM_INTEGRATION "Build the OPM integration layer?" ${_ENABLE_OPM_INTEGRATION_DEFAULT})
+
+# The OPM modules require C++20 (opm-common sets cxx_std_20 PUBLIC), the standalone library does not
+if(ENABLE_OPM_INTEGRATION)
+  set(GEOCHEM_CXX_STANDARD 20)
+else()
+  set(GEOCHEM_CXX_STANDARD 17)
+endif()
+set(CMAKE_CXX_STANDARD ${GEOCHEM_CXX_STANDARD})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(WIN32 AND ENABLE_OPM_INTEGRATION)
   message(WARNING "OPM integration is usually unavailable on Windows. Configure with -DENABLE_OPM_INTEGRATION=OFF for standalone builds.")
@@ -208,7 +214,7 @@ function(geochem_add_standalone_targets)
   )
   add_library(GeoChem::GeoChem ALIAS GeoChem)
 
-  target_compile_features(GeoChem PUBLIC cxx_std_17)
+  target_compile_features(GeoChem PUBLIC cxx_std_${GEOCHEM_CXX_STANDARD})
   target_include_directories(GeoChem
     PUBLIC
       $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
