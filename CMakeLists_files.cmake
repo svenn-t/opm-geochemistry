@@ -108,6 +108,7 @@ set(GEOCHEM_OPM_PUBLIC_HEADER_FILES
     opm/simulators/flow/FlowProblemGeochemistry.hpp
     opm/simulators/flow/GeochemistryModelParameters.hpp
     opm/simulators/geochemistry/OpmGeoChemInterface.hpp
+    opm/simulators/utils/UpwindGraph.hpp
 )
 
 set(GEOCHEM_STANDALONE_EXAMPLE_SOURCE_FILES
