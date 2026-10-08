@@ -338,6 +338,16 @@ macro(opm-geochemistry_targets_hook)
                  $<TARGET_OBJECTS:moduleVersionGeochem>
   )
 
+  opm_add_test(test_tarjan
+               DEPENDS
+                 opmcommon
+               LIBRARIES
+                 opmcommon
+                 Boost::unit_test_framework
+               SOURCES
+                 tests/test_tarjan.cpp
+  )
+
   if(NOT BUILD_STANDALONE)
     add_executable(GeoChemX
       examples/GeoChemX.cpp

@@ -99,6 +99,7 @@ set(GEOCHEM_CORE_PUBLIC_HEADER_FILES
     opm/simulators/geochemistry/Utility/HelperMacros.hpp
     opm/simulators/geochemistry/Utility/HelpfulStringMethods.hpp
     opm/simulators/geochemistry/Utility/MiscUtilityFunctions.hpp
+    opm/simulators/utils/Tarjan.hpp
 )
 
 set(GEOCHEM_OPM_PUBLIC_HEADER_FILES
