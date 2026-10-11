@@ -54,6 +54,8 @@ GeochemistryModelParameters<Scalar>::GeochemistryModelParameters()
                         limited));
     }
     target_cfl_ = limited;
+
+    transport_solver_ = Parameters::Get<Parameters::GeochemistryTransportSolver>();
 }
 
 template <class Scalar>
@@ -63,6 +65,9 @@ GeochemistryModelParameters<Scalar>::registerParameters()
     Parameters::Register<Parameters::GeochemistryTargetCfl<Scalar>>(
         "Target Courant number for the explicit reactive transport. The number of "
         "reactive transport substeps is calculated to keep the Courant number below this value");
+    Parameters::Register<Parameters::GeochemistryTransportSolver>(
+        "Solver for the reactive transport: 'explicit' (substeps with a Courant number below the "
+        "target) or 'reorder' (implicit upwind, solved cell by cell in the order of the flow)");
 }
 
 template struct GeochemistryModelParameters<double>;

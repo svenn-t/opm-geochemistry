@@ -70,16 +70,16 @@ public:
     ///         connection is unknown.
     void addConnection(int a, int b, double flux)
     {
-        checkCell(a);
-        checkCell(b);
+        checkCell_(a);
+        checkCell_(b);
         if (std::isnan(flux)) {
             throw std::invalid_argument("Opm::UpwindGraphBuilder: NaN flux between cells "
                                         + std::to_string(a) + " and " + std::to_string(b));
         }
         if (flux > 0.0) {
-            upwindOf_.emplace_back(b, a);
+            edges_.push_back({b, a, flux});
         } else if (flux < 0.0) {
-            upwindOf_.emplace_back(a, b);
+            edges_.push_back({a, b, -flux});
         }
     }
 
@@ -87,23 +87,20 @@ public:
     /// the connections were added.
     SparseTable<int> build() const
     {
-        // Counting sort of the edges by the cell they belong to.
-        std::vector<int> rowStart(static_cast<std::size_t>(numCells_) + 1, 0);
-        for (const auto& edge : upwindOf_) {
-            ++rowStart[static_cast<std::size_t>(edge.first) + 1];
-        }
-        std::partial_sum(rowStart.begin(), rowStart.end(), rowStart.begin());
+        return sortByCell_<int>([](const Edge& edge) { return edge.upwindCell; });
+    }
 
-        std::vector<int> next(rowStart.begin(), rowStart.end() - 1);
-        std::vector<int> upwindCells(upwindOf_.size());
-        for (const auto& [cell, upwindCell] : upwindOf_) {
-            upwindCells[static_cast<std::size_t>(next[cell]++)] = upwindCell;
-        }
-        return {std::move(upwindCells), std::move(rowStart)};
+    /// The flux through each edge of the graph from build(), as a positive
+    /// number, in the same layout: entry `k` of row `c` is the flux from the
+    /// `k`-th upwind cell of `c` into `c`.
+    template <class Scalar = double>
+    SparseTable<Scalar> buildFluxes() const
+    {
+        return sortByCell_<Scalar>([](const Edge& edge) { return static_cast<Scalar>(edge.flux); });
     }
 
 private:
-    void checkCell(int cell) const
+    void checkCell_(int cell) const
     {
         if (cell < 0 || cell >= numCells_) {
             throw std::out_of_range("Opm::UpwindGraphBuilder: cell " + std::to_string(cell)
@@ -112,8 +109,34 @@ private:
         }
     }
 
+    struct Edge
+    {
+        int cell;
+        int upwindCell;
+        double flux; // positive
+    };
+
+    // Counting sort of the edges by the cell they belong to. It is stable, so
+    // the values of a row are in the order the edges were added.
+    template <class T, class ValueOf>
+    SparseTable<T> sortByCell_(ValueOf valueOf) const
+    {
+        std::vector<int> rowStart(static_cast<std::size_t>(numCells_) + 1, 0);
+        for (const auto& edge : edges_) {
+            ++rowStart[static_cast<std::size_t>(edge.cell) + 1];
+        }
+        std::partial_sum(rowStart.begin(), rowStart.end(), rowStart.begin());
+
+        std::vector<int> next(rowStart.begin(), rowStart.end() - 1);
+        std::vector<T> values(edges_.size());
+        for (const auto& edge : edges_) {
+            values[static_cast<std::size_t>(next[edge.cell]++)] = valueOf(edge);
+        }
+        return {std::move(values), std::move(rowStart)};
+    }
+
     int numCells_;
-    std::vector<std::pair<int, int>> upwindOf_;
+    std::vector<Edge> edges_;
 };
 
 /// Build the upwind graph of a grid from the flux between neighbouring cells.

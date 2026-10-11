@@ -249,6 +249,34 @@ BOOST_AUTO_TEST_CASE(BuilderGivesTheUpwindCellsOfEachCell)
     BOOST_CHECK_EQUAL_COLLECTIONS(row.begin(), row.end(), expected.begin(), expected.end());
 }
 
+BOOST_AUTO_TEST_CASE(BuilderGivesTheFluxOfEachEdgeInTheLayoutOfTheGraph)
+{
+    Opm::UpwindGraphBuilder builder(4);
+    builder.addConnection(0, 1, 2.0); // 0 is upwind of 1, flux 2
+    builder.addConnection(3, 2, -7.0); // 2 is upwind of 3, flux 7
+    builder.addConnection(2, 1, 5.0); // 2 is upwind of 1, flux 5
+    builder.addConnection(1, 3, -1.5); // 3 is upwind of 1, flux 1.5
+    builder.addConnection(0, 3, 0.0); // no edge, and no flux
+
+    const auto graph = builder.build();
+    const auto fluxes = builder.buildFluxes();
+    BOOST_REQUIRE_EQUAL(fluxes.size(), graph.size());
+    for (int c = 0; c < graph.size(); ++c) {
+        BOOST_REQUIRE_EQUAL(fluxes[c].size(), graph[c].size());
+    }
+
+    const auto fluxRow = [&](int c) {
+        const auto row = fluxes[c];
+        return std::vector<double> {row.begin(), row.end()};
+    };
+    BOOST_CHECK((rowOf(graph, 1) == std::vector<int> {0, 2, 3}));
+    BOOST_CHECK((fluxRow(1) == std::vector<double> {2.0, 5.0, 1.5}));
+    BOOST_CHECK((rowOf(graph, 3) == std::vector<int> {2}));
+    BOOST_CHECK((fluxRow(3) == std::vector<double> {7.0}));
+    BOOST_CHECK(fluxRow(0).empty());
+    BOOST_CHECK(fluxRow(2).empty());
+}
+
 BOOST_AUTO_TEST_CASE(BuilderWithoutCells)
 {
     const Opm::UpwindGraphBuilder builder(0);

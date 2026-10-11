@@ -348,6 +348,17 @@ macro(opm-geochemistry_targets_hook)
                  tests/test_tarjan.cpp
   )
 
+  opm_add_test(test_upwindtransport
+               DEPENDS
+                 opmgrid
+               LIBRARIES
+                 opmgrid
+                 opmcommon
+                 Boost::unit_test_framework
+               SOURCES
+                 tests/test_upwindtransport.cpp
+  )
+
   opm_add_test(test_upwindgraph
                DEPENDS
                  opmgrid
