@@ -881,7 +881,11 @@ protected:
             Scalar flux; //!< Water flux into the cell, in surface volume per time
         };
         UpwindGraphBuilder graphBuilder(static_cast<int>(numDofs));
-        std::vector<Scalar> outflow(numDofs, 0.0);
+
+        // The water that flows over the faces of each cell, per time. It is the water that flows
+        // out of the cell, or with the volume correction, the water that flows into it.
+        const bool volumeCorrection = param_.volume_correction_;
+        std::vector<Scalar> faceWater(numDofs, 0.0);
         std::vector<OverlapInflow> overlapInflows;
         for (const auto I : interiorDofs_) {
             for (const auto& face : faceFluxes_[I]) {
@@ -892,12 +896,20 @@ protected:
                     if (J > I) {
                         graphBuilder.addConnection(
                             static_cast<int>(I), static_cast<int>(J), face.flux);
-                        outflow[face.flux > 0.0 ? I : J] += std::abs(face.flux);
+                        // The cell the water leaves, or with the volume correction, the cell it
+                        // enters
+                        faceWater[(face.flux > 0.0) == volumeCorrection ? J : I]
+                            += std::abs(face.flux);
                     }
                 } else if (face.flux > 0.0) {
-                    outflow[I] += face.flux;
+                    if (!volumeCorrection) {
+                        faceWater[I] += face.flux;
+                    }
                 } else if (face.flux < 0.0) {
                     overlapInflows.push_back({I, J, -face.flux});
+                    if (volumeCorrection) {
+                        faceWater[I] -= face.flux;
+                    }
                 }
             }
         }
@@ -905,20 +917,23 @@ protected:
         const auto fluxes = graphBuilder.buildFluxes<Scalar>();
 
         // Volume terms, wells and the storage of the species. The cells that are not interior
-        // have no equation.
+        // have no equation. The water that the wells inject or produce is part of the volume
+        // balance, so the volume correction does not need it in the diagonal.
         std::vector<Scalar> diagonal(numDofs, 1.0);
         std::vector<SpeciesVector> rhsFixed(nSpecies, SpeciesVector(numDofs));
         for (auto& rhs : rhsFixed) {
             rhs = 0.0;
         }
         for (const auto I : interiorDofs_) {
-            diagonal[I] = volumeNew_[I] + dt * outflow[I];
+            diagonal[I] = (volumeCorrection ? vol1_[I] : volumeNew_[I]) + dt * faceWater[I];
             for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
                 rhsFixed[sIdx][I] = vol1_[I] * concentrationInitial_[sIdx][I];
             }
         }
         for (const auto& [I, source] : wellSources_) {
-            diagonal[I] -= dt * source.waterProductionRate;
+            if (!volumeCorrection) {
+                diagonal[I] -= dt * source.waterProductionRate;
+            }
             for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
                 rhsFixed[sIdx][I] += dt * source.speciesInjectionRate[sIdx];
             }

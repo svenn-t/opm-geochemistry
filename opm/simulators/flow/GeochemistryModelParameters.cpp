@@ -56,6 +56,7 @@ GeochemistryModelParameters<Scalar>::GeochemistryModelParameters()
     target_cfl_ = limited;
 
     transport_solver_ = Parameters::Get<Parameters::GeochemistryTransportSolver>();
+    volume_correction_ = Parameters::Get<Parameters::GeochemistryVolumeCorrection>();
 }
 
 template <class Scalar>
@@ -68,6 +69,9 @@ GeochemistryModelParameters<Scalar>::registerParameters()
     Parameters::Register<Parameters::GeochemistryTransportSolver>(
         "Solver for the reactive transport: 'explicit' (substeps with a Courant number below the "
         "target) or 'reorder' (implicit upwind, solved cell by cell in the order of the flow)");
+    Parameters::Register<Parameters::GeochemistryVolumeCorrection>(
+        "Correct for a volume balance error in the flow simulator. Only valid for "
+        "--geochemistry-transport-solver=explicit");
 }
 
 template struct GeochemistryModelParameters<double>;

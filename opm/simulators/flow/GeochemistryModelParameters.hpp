@@ -37,6 +37,12 @@ struct GeochemistryTransportSolver
     static constexpr auto value = "explicit";
 };
 
+//! Use the volume balance of the flow simulator in the reorder transport
+struct GeochemistryVolumeCorrection
+{
+    static constexpr bool value = false;
+};
+
 } // namespace Opm::Parameters
 
 namespace Opm
@@ -57,6 +63,9 @@ struct GeochemistryModelParameters
 
     /// Solver for the reactive transport: "explicit" or "reorder"
     std::string transport_solver_;
+
+    /// Use the volume balance of the flow simulator in the reorder transport
+    bool volume_correction_;
 };
 
 } // namespace Opm
