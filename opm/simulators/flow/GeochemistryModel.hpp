@@ -21,10 +21,20 @@
 #ifndef GEOCHEMISTRY_MODEL_HPP
 #define GEOCHEMISTRY_MODEL_HPP
 
+#include <dune/common/fvector.hh>
 #include <dune/common/timer.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/partitionset.hh>
+#include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/bvector.hh>
+#include <dune/istl/operators.hh>
+#include <dune/istl/preconditioners.hh>
+#include <dune/istl/scalarproducts.hh>
+#include <dune/istl/solvers.hh>
+#if HAVE_MPI
+#include <dune/istl/owneroverlapcopy.hh>
+#include <dune/istl/schwarz.hh>
+#endif
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -33,6 +43,7 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
 
+#include <opm/grid/CpGrid.hpp>
 #include <opm/grid/utility/ElementChunks.hpp>
 
 #include <opm/models/parallel/threadmanager.hpp>
@@ -40,6 +51,11 @@
 
 #include <opm/simulators/flow/GeochemistryModelParameters.hpp>
 #include <opm/simulators/geochemistry/OpmGeoChemInterface.hpp>
+#include <opm/simulators/linalg/FlexibleSolver.hpp>
+#include <opm/simulators/linalg/PropertyTree.hpp>
+#include <opm/simulators/linalg/ilufirstelement.hh>
+#include <opm/simulators/linalg/matrixblock.hh>
+#include <opm/simulators/utils/UpwindTransportSolver.hpp>
 #include <opm/simulators/wells/WellTracerRate.hpp>
 
 #include <fmt/format.h>
@@ -48,10 +64,13 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -70,16 +89,37 @@ class GeochemistryModel
 
     using CartesianIndexMapper = Dune::CartesianIndexMapper<Grid>;
     using SpeciesVector = Dune::BlockVector<Scalar>;
+    // The matrix and the vectors of the implicit transport have the types of the ISTL solvers
+    using TransportMatrix = Dune::BCRSMatrix<MatrixBlock<Scalar, 1, 1>>;
+    using TransportVector = Dune::BlockVector<Dune::FieldVector<Scalar, 1>>;
 
     enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
 
     static constexpr int maxNumSubsteps = 100;
-    static constexpr Scalar tolSat = 1e-6; //!< Water saturation below which a cell is dry
-    static constexpr Scalar minSatInitial = 0.1; //!< Minimum water saturation of initial solve
+    static constexpr Scalar tolSat = 1e-6;
+    static constexpr Scalar minSatInitial = 0.1;
 
+    // Iterations and relative tolerance of the implicit transport between the ranks
+    static constexpr int maxOverlapIterations = 100;
+    static constexpr Scalar overlapTolerance = 1.0e-8;
+
+    // Gauss-Seidel, reorder solver settings
+    static constexpr UpwindTransportSettings reorderSettings {.relTolerance = 1.0e-8,
+                                                              .maxIterations = 1000};
+
+    // Settings for the ISTL solver in implicit transport
+    static constexpr Scalar istlTolerance = 1.0e-8;
+    static constexpr int istlMaxIterations = 200;
+
+    enum class TransportSolver : std::uint8_t {
+        Explicit, //!< Explicit upwind with substeps
+        Reorder, //!< Implicit upwind, solved cell by cell in the order of the flow
+        Istl //!< Implicit upwind, solved with Dune-ISTL BiCGSTAB and ILU0
+    };
     struct WellSource
     {
         std::vector<Scalar> speciesInjectionRate; //!< Species amount injected per time
+        Scalar waterInjectionRate {0}; //!< Water injected per time
         Scalar waterProductionRate {0}; //!< Water produced per time
     };
     struct ProducerConnection
@@ -99,8 +139,16 @@ class GeochemistryModel
     {
         double total = 0.0; //!< All of beginTimeStep() and endTimeStep()
         double transportSetup = 0.0; //!< Well terms, fluxes, volumes and number of substeps
-        double transportUpdate = 0.0; //!< Upwind update of the species
+        double transportUpdate = 0.0; //!< Upwind update of the species, explicit solver
+        double assembly = 0.0; //!< Matrix and right-hand sides, implicit solvers
+        double linearSolve = 0.0; //!< Solves and iterations between the ranks, implicit solvers
         double chemistry = 0.0; //!< Geochemistry solves, including the initial equilibration
+    };
+    struct IstlResult
+    {
+        bool converged = true; //!< True if the solver converged for all species
+        int iterations = 0; //!< Summed over the species
+        int maxIterations = 0; //!< Largest number of iterations of a species
     };
 
 public:
@@ -114,6 +162,7 @@ public:
         , eclState_  (simulator.vanguard().eclState())
         , cartMapper_(simulator.vanguard().cartesianIndexMapper())
         , element_chunks_(simulator.gridView(), Dune::Partitions::all, ThreadManager::maxThreads())
+        , transportSolver_(parseTransportSolver_(param_.transport_solver_))
     {}
 
     /*!
@@ -261,7 +310,7 @@ public:
         Dune::Timer timer;
 
         // Store variables from previous time step
-        updateStorageCache();
+        updateStorageCache_();
 
         // Equilibrate the initial state, which is only done in the first time step
         if (!initialEquilibrationDone_) {
@@ -283,7 +332,11 @@ public:
         Dune::Timer timer;
 
         // Reactive transport
-        advanceSpeciesFieldsExplicit();
+        if (transportSolver_ == TransportSolver::Explicit) {
+            advanceSpeciesFieldsExplicit_();
+        } else {
+            advanceSpeciesFieldsImplicit_();
+        }
 
         timing_.total += timer.elapsed();
     }
@@ -293,8 +346,7 @@ public:
      *
      * \returns The section, or an empty string if GEOCHEM is not activated
      *
-     * \note The times are those of this rank, like the rest of the summary, which is written by the
-     * output rank. They are part of its "Pre/post step" time.
+     * \note The times are those of rank 0, like the rest of the Flow summary.
      */
     std::string timingSummary() const
     {
@@ -303,12 +355,21 @@ public:
         }
 
         const auto& t = timing_;
+        const bool isExplicit = transportSolver_ == TransportSolver::Explicit;
+        auto average = [](const int total, const int count) {
+            return count > 0 ? static_cast<double>(total) / count : 0.0;
+        };
         std::string summary = "Geochemistry (part of pre/post step)\n";
         summary += fmt::format("Simulation time:            {:9.2f} s\n", t.total);
         summary += fmt::format("  Transport:                {:9.2f} s\n",
-                               t.transportSetup + t.transportUpdate);
+                               t.transportSetup + t.transportUpdate + t.assembly + t.linearSolve);
         summary += fmt::format("    Setup:                    {:7.2f} s\n", t.transportSetup);
-        summary += fmt::format("    Update:                   {:7.2f} s\n", t.transportUpdate);
+        if (isExplicit) {
+            summary += fmt::format("    Update:                   {:7.2f} s\n", t.transportUpdate);
+        } else {
+            summary += fmt::format("    Assembly:                 {:7.2f} s\n", t.assembly);
+            summary += fmt::format("    Linear solve:             {:7.2f} s\n", t.linearSolve);
+        }
         summary += fmt::format("  Chemistry:                {:9.2f} s\n", t.chemistry);
         if (const auto lookups = geoChemInterface_->splayTreeLookups(); lookups > 0) {
             const auto solves = geoChemInterface_->splayTreeSolves();
@@ -318,12 +379,41 @@ public:
                 lookups,
                 skipped);
         }
-        const double avgSubsteps
-            = numTimeSteps_ > 0 ? static_cast<double>(numSubstepsTotal_) / numTimeSteps_ : 0.0;
-        summary += fmt::format("Explicit substeps:       {:9} (avg {:.1f}, max {} per time step)\n",
+        if (isExplicit) {
+            summary
+                += fmt::format("Explicit substeps:       {:9} (avg {:.1f}, max {} per time step)\n",
                                numSubstepsTotal_,
-                               avgSubsteps,
+                               average(numSubstepsTotal_, numTimeSteps_),
                                numSubstepsMax_);
+            return summary;
+        }
+        if (simulator_.gridView().comm().size() > 1) {
+            summary
+                += fmt::format("Overall rank iterations: {:9} (avg {:.1f}, max {} per time step)\n",
+                               numRankIterationsTotal_,
+                               average(numRankIterationsTotal_, numTimeSteps_),
+                               numRankIterationsMax_);
+        }
+        if (transportSolver_ == TransportSolver::Reorder) {
+            // A component of one cell is not a loop
+            const int largestLoop = reorderLargestComponent_ > 1 ? reorderLargestComponent_ : 0;
+            summary += fmt::format("Max. reorder flow loops: {:9} (avg {:.1f} per solve)\n",
+                                   reorderLoopsMax_,
+                                   average(reorderLoopsTotal_, numReorderSolves_));
+            summary += fmt::format("Reorder largest loop:    {:9} cells\n", largestLoop);
+            summary += fmt::format("Overall GS iterations:   {:9} (avg {:.1f}, max {} per solve)\n",
+                                   reorderSweepsTotal_,
+                                   average(reorderSweepsTotal_, numReorderSolves_),
+                                   reorderSweepsMax_);
+            summary += fmt::format("ISTL fallbacks:          {:9}\n", numIstlFallbacks_);
+        }
+        if (numIstlSolves_ > 0) {
+            summary
+                += fmt::format("Overall ISTL iterations: {:9} (avg {:.1f}, max {} per species)\n",
+                               numIstlIterationsTotal_,
+                               average(numIstlIterationsTotal_, numIstlSolves_),
+                               numIstlIterationsMax_);
+        }
         return summary;
     }
 
@@ -383,7 +473,7 @@ public:
     /*!
     * \brief Get (reference to) a particular ion exchange name
     *
-    * \param minSpeciesIdx Index of ion exchange
+    * \param ionExIdx Index of ion exchange
     * \returns String with queried ion exchage name
     */
     const std::string& ionExchangeName(unsigned ionExIdx) const
@@ -463,7 +553,7 @@ public:
     }
 
     /*!
-    * \brief Set species contration rate in a grid cell
+    * \brief Set species concentration rate in a grid cell
     *
     * \param speciesIdx Index of mineral
     * \param globalDofIdx Cell index
@@ -595,7 +685,7 @@ protected:
     *
     * \warning Everything that is need from Flow -and is not stored before endTimeStep()- must be saved here!
     */
-    void updateStorageCache()
+    void updateStorageCache_()
     {
         // Update concentration from previous time step
         concentrationInitial_ = concentration_;
@@ -624,9 +714,6 @@ protected:
      *        overlap cells
      *
      * \param concentrations Concentration vector for each species
-     *
-     * \note VectorVectorDataHandle.hpp has no include guard, so it is not included here again. It
-     * is included by TracerModel.hpp, which FlowProblem.hpp includes before this file.
      */
     void communicateConcentrations_(std::vector<SpeciesVector>& concentrations)
     {
@@ -640,7 +727,7 @@ protected:
     * \brief Equilibrate the geochemical system in all interior cells with the initial concentrations
     *
     * \note Done once, in the first beginTimeStep(), so every cell is equilibrated before any
-    * transport is calculated. Uses the concentrations stored by updateStorageCache().
+    * transport is calculated. Uses the concentrations stored by updateStorageCache_().
     */
     void initialEquilibration_()
     {
@@ -653,7 +740,7 @@ protected:
 
             elemCtx.updateStencil(elem);
             const unsigned I = elemCtx.globalSpaceIndex(/*dofIdx=*/ 0, /*timeIdx=*/0);
-            speciesEquationChemistryExplicit_(/*dt=*/0.0, I, /*initial_equil=*/true);
+            solveChemistry_(/*dt=*/0.0, I, /*initial_equil=*/true);
         }
 
         // The overlap cells, which are owned by other ranks, must have the equilibrated values too
@@ -668,11 +755,20 @@ protected:
     *
     * \note The actual reactive transport solver is in speciesEquationsExplicit_()
     */
-    void advanceSpeciesFieldsExplicit()
+    void advanceSpeciesFieldsExplicit_()
     {
         // Calculate new concentration fields for each species
         speciesEquationsExplicit_();
+        finalizeSpeciesFields_();
+    }
 
+    /*!
+     * \brief Post-processing of the species fields after the transport solve
+     *
+     * Shared by the explicit and the reorder solver.
+     */
+    void finalizeSpeciesFields_()
+    {
         // Post-processing for concentration output
         // Only interior cells are processed, the overlap cells are overwritten by the
         // communication below.
@@ -690,7 +786,9 @@ protected:
 
         // The overlap cells are not calculated here, they get the values from the rank that owns
         // them. This is needed for the flux terms of the next time step.
+        Dune::Timer timer;
         communicateConcentrations_(concentration_);
+        timing_.chemistry += timer.elapsed();
 
         // Correct the reported rates of the producers with cross flow, then convert to raw rates
         correctCrossFlowRates_();
@@ -778,15 +876,36 @@ protected:
     }
 
     /*!
-     * \brief Reactive transport solver with explicit scheme
+     * \brief Get the transport solver from the name given in the runtime parameter
      *
-     * The time step is split in as many substeps as needed to keep the Courant number below 1, so
-     * that no cell loses more water than it holds in a substep. The fluxes and well rates are those
-     * of the time step, and the pore volume changes linearly from the old to the new value. Each
-     * substep does the transport and then the chemistry, so the chemistry follows the water as it
-     * moves through the cells. With a Courant number below 1 there is a single substep.
+     * \param name Name of the solver, "explicit", "reorder" or "istl"
+     * \returns The transport solver
      */
-    void speciesEquationsExplicit_()
+    static TransportSolver parseTransportSolver_(const std::string& name)
+    {
+        if (name == "explicit") {
+            return TransportSolver::Explicit;
+        }
+        if (name == "reorder") {
+            return TransportSolver::Reorder;
+        }
+        if (name == "istl") {
+            return TransportSolver::Istl;
+        }
+        throw std::invalid_argument(fmt::format(
+            "Unknown geochemistry transport solver '{}', use 'explicit', 'reorder' or 'istl'",
+            name));
+    }
+
+    /*!
+     * \brief Prepare the species equations of a time step
+     *
+     * Clears the well output, calculates the well terms and the quantities of the interior cells
+     * that are constant during the time step.
+     *
+     * \param elemCtx Reference to element context object
+     */
+    void prepareSpeciesEquations_(ElementContext& elemCtx)
     {
         // Clear well containers
         wellSpeciesRate_.clear();
@@ -797,20 +916,32 @@ protected:
         wellSpeciesRate_.reserve(wellPtrs.size());
         mSwSpeciesRate_.reserve(wellPtrs.size());
 
-        // Simulator information
-        Dune::Timer timer;
-        ElementContext elemCtx(simulator_);
-        const Scalar dt = elemCtx.simulator().timeStepSize();
-
         // Calculate well terms. The perforations of a rank are only in its interior cells.
         wellSources_.clear();
         producerConnections_.clear();
         for (const auto& wellPtr : wellPtrs) {
-            speciesEquationWellExplicit_(*wellPtr);
+            computeWellTerms_(*wellPtr);
         }
 
         // Quantities that are constant during the time step
-        prepareTransportExplicit_(elemCtx);
+        prepareInteriorCells_(elemCtx);
+    }
+
+    /*!
+     * \brief Reactive transport solver with explicit scheme
+     *
+     * The time step is split in as many substeps as needed to keep the Courant number below 1, so
+     * that no cell loses more water than it holds in a substep. The fluxes and well rates are those
+     * of the time step, and the pore volume changes linearly from the old to the new value. Each
+     * substep does the transport and then the chemistry, so the chemistry follows the water as it
+     * moves through the cells. With a Courant number below 1 there is a single substep.
+     */
+    void speciesEquationsExplicit_()
+    {
+        Dune::Timer timer;
+        ElementContext elemCtx(simulator_);
+        const Scalar dt = elemCtx.simulator().timeStepSize();
+        prepareSpeciesEquations_(elemCtx);
 
         // Transport from the concentrations at the start of the time step
         for (std::size_t sIdx = 0; sIdx < numSpecies(); ++sIdx) {
@@ -831,8 +962,7 @@ protected:
             timer.reset();
             const Scalar substepFraction = static_cast<Scalar>(substep + 1) / numSubsteps;
             for (const auto I : interiorDofs_) {
-                speciesEquationChemistryExplicit_(dt / numSubsteps, I, /*initial_equil=*/false,
-                                                  substepFraction);
+                solveChemistry_(dt / numSubsteps, I, /*initial_equil=*/false, substepFraction);
             }
             communicateConcentrations_(concentration_);
             timing_.chemistry += timer.elapsed();
@@ -840,13 +970,265 @@ protected:
     }
 
     /*!
+     * \brief Run implicit reactive transport solver and post-processing
+     *
+     * Alternative to advanceSpeciesFieldsExplicit_(), with the same post-processing.
+     *
+     * \note The actual reactive transport solver is in speciesEquationsImplicit_()
+     */
+    void advanceSpeciesFieldsImplicit_()
+    {
+        speciesEquationsImplicit_();
+        finalizeSpeciesFields_();
+    }
+
+    /*!
+     * \brief Implicit upwind reactive transport
+     *
+     * For each species, in one time step:
+     *
+     *     (V + dt * Q_out + dt * Q_prod) C = V0 * C0 + dt * sum_up (Q_in * C_up) + dt * inj
+     *
+     * with V0 and V the water volumes before and after the time step. With the volume correction,
+     * the factor of C is V0 + dt * Q_in + dt * Q_inj. All species share the matrix, which is solved
+     * with the reorder solver (cell by cell in the order of the flow) or with ISTL, see
+     * solveTransport_(). The chemistry is solved after the transport.
+     *
+     * Overlap cells are identity rows. The ranks iterate (block Jacobi) until the overlap cells do
+     * not change.
+     */
+    void speciesEquationsImplicit_()
+    {
+        Dune::Timer timer;
+        ElementContext elemCtx(simulator_);
+        const Scalar dt = elemCtx.simulator().timeStepSize();
+        prepareSpeciesEquations_(elemCtx);
+        timing_.transportSetup += timer.elapsed();
+
+        timer.reset();
+        if (!transportMatrix_) {
+            createTransportMatrix_(elemCtx);
+        }
+
+        const std::size_t numDofs = vol1_.size();
+        const std::size_t nSpecies = numSpecies();
+
+        // The water that comes in from the overlap cells
+        struct OverlapInflow
+        {
+            std::size_t cell;
+            std::size_t overlapCell;
+            Scalar flux;
+        };
+
+        // The rows of the overlap cells are the identity. The rows of the interior cells get the
+        // water that flows in from the other interior cells.
+        auto& matrix = *transportMatrix_;
+        matrix = 0.0;
+        for (std::size_t I = 0; I < numDofs; ++I) {
+            if (!isInteriorDof_[I]) {
+                matrix[I][I][0][0] = 1.0;
+            }
+        }
+
+        // The water that flows over the faces of each cell, per time. It is the water that flows
+        // out of the cell, or with the volume correction, the water that flows into it.
+        const bool volumeCorrection = param_.volume_correction_;
+        std::vector<Scalar> faceWater(numDofs, 0.0);
+        std::vector<OverlapInflow> overlapInflows;
+        for (const auto I : interiorDofs_) {
+            for (const auto& face : faceFluxes_[I]) {
+                const std::size_t J = face.neighbour;
+                if (isInteriorDof_[J]) {
+                    // The flux over a face is calculated from both sides. To use the same
+                    // flux in both cells, the cell with the lowest index is used
+                    if (J > I) {
+                        // The row of the cell the water enters gets the cell it comes from
+                        if (face.flux > 0.0) {
+                            matrix[J][I][0][0] -= dt * face.flux;
+                        } else if (face.flux < 0.0) {
+                            matrix[I][J][0][0] += dt * face.flux;
+                        }
+                        // The cell the water leaves, or with the volume correction, the cell it
+                        // enters
+                        faceWater[(face.flux > 0.0) == volumeCorrection ? J : I]
+                            += std::abs(face.flux);
+                    }
+                } else if (face.flux > 0.0) {
+                    if (!volumeCorrection) {
+                        faceWater[I] += face.flux;
+                    }
+                } else if (face.flux < 0.0) {
+                    overlapInflows.push_back({I, J, -face.flux});
+                    if (volumeCorrection) {
+                        faceWater[I] -= face.flux;
+                    }
+                }
+            }
+        }
+
+        // Volume terms, wells and storage. Produced water belongs to the factor with the new
+        // volume, injected water to the factor of the volume correction.
+        std::vector<TransportVector> rhsFixed(nSpecies, TransportVector(numDofs));
+        for (auto& rhs : rhsFixed) {
+            rhs = 0.0;
+        }
+        for (const auto I : interiorDofs_) {
+            matrix[I][I][0][0] = (volumeCorrection ? vol1_[I] : volumeNew_[I]) + dt * faceWater[I];
+            for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
+                rhsFixed[sIdx][I] = vol1_[I] * concentrationInitial_[sIdx][I];
+            }
+        }
+        for (const auto& [I, source] : wellSources_) {
+            if (volumeCorrection) {
+                matrix[I][I][0][0] += dt * source.waterInjectionRate;
+            } else {
+                matrix[I][I][0][0] -= dt * source.waterProductionRate;
+            }
+            for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
+                rhsFixed[sIdx][I] += dt * source.speciesInjectionRate[sIdx];
+            }
+        }
+
+        // The overlap cells that feed the interior cells
+        std::vector<std::size_t> feedingCells;
+        feedingCells.reserve(overlapInflows.size());
+        for (const auto& inflow : overlapInflows) {
+            feedingCells.push_back(inflow.overlapCell);
+        }
+        std::ranges::sort(feedingCells);
+        feedingCells.erase(std::ranges::unique(feedingCells).begin(), feedingCells.end());
+
+        timing_.assembly += timer.elapsed();
+
+        // Transport from the concentrations at the start of the time step, which are also the
+        // first guess for the overlap cells
+        timer.reset();
+        for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
+            concentration_[sIdx] = concentrationInitial_[sIdx];
+        }
+        const auto& comm = simulator_.gridView().comm();
+        auto rhs = rhsFixed;
+        std::vector<TransportVector> solution(nSpecies, TransportVector(numDofs));
+        std::optional<UpwindTransportStatistics> statistics;
+        int iteration = 0;
+        bool converged = false;
+        while (!converged && iteration < maxOverlapIterations) {
+            ++iteration;
+            rhs = rhsFixed;
+            for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
+                for (std::size_t I = 0; I < numDofs; ++I) {
+                    if (!isInteriorDof_[I]) {
+                        rhs[sIdx][I] = concentration_[sIdx][I];
+                    }
+                }
+            }
+            for (const auto& inflow : overlapInflows) {
+                for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
+                    rhs[sIdx][inflow.cell]
+                        += dt * inflow.flux * concentration_[sIdx][inflow.overlapCell];
+                }
+            }
+
+            // The current concentrations are the first guess. Only the interior cells are copied
+            // back, so the overlap cells keep their values.
+            for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
+                for (std::size_t I = 0; I < numDofs; ++I) {
+                    solution[sIdx][I] = concentration_[sIdx][I];
+                }
+            }
+            statistics = solveTransport_(matrix, rhs, solution);
+            for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
+                for (const auto I : interiorDofs_) {
+                    concentration_[sIdx][I] = solution[sIdx][I];
+                }
+            }
+
+            if (comm.size() == 1) {
+                break;
+            }
+
+            // All ranks must communicate the same number of times. The iteration stops when no
+            // overlap cell that feeds an interior cell changes on any rank.
+            std::vector<Scalar> previous;
+            previous.reserve(feedingCells.size() * nSpecies);
+            for (const auto J : feedingCells) {
+                for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
+                    previous.push_back(concentration_[sIdx][J]);
+                }
+            }
+            communicateConcentrations_(concentration_);
+            Scalar maxChange = 0.0;
+            Scalar scale = 0.0;
+            std::size_t k = 0;
+            for (const auto J : feedingCells) {
+                for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
+                    maxChange = std::max(maxChange,
+                                         std::abs(concentration_[sIdx][J] - previous[k++]));
+                    scale = std::max(scale, std::abs(concentration_[sIdx][J]));
+                }
+            }
+            maxChange = comm.max(maxChange);
+            scale = comm.max(scale);
+            converged = maxChange <= overlapTolerance * scale;
+        }
+        timing_.linearSolve += timer.elapsed();
+        ++numTimeSteps_;
+        numRankIterationsTotal_ += iteration;
+        numRankIterationsMax_ = std::max(numRankIterationsMax_, iteration);
+        if (comm.size() > 1 && !converged) {
+            OpmLog::warning(fmt::format("The geochemistry transport did not converge between the "
+                                        "ranks in {} iterations. The concentrations at the rank "
+                                        "borders are not exact. Reduce the time step.",
+                                        maxOverlapIterations));
+        }
+        if (statistics) {
+            // Each overlap cell is a component of its own, without couplings
+            const int numOverlapDofs = static_cast<int>(numDofs - interiorDofs_.size());
+            OpmLog::debug(fmt::format("Geochemistry transport: {} cells in {} components, "
+                                      "{} flow loops, largest loop {} cells, {} iterations "
+                                      "between the ranks",
+                                      interiorDofs_.size(),
+                                      statistics->numComponents - numOverlapDofs,
+                                      statistics->numLoops,
+                                      statistics->largestComponent,
+                                      iteration));
+        } else {
+            OpmLog::debug(fmt::format(
+                "Geochemistry transport: ISTL solver, {} iterations between the ranks", iteration));
+        }
+
+        // Report the species produced by the producers, with the concentration of the cell after
+        // the transport
+        for (const auto& connection : producerConnections_) {
+            auto& speciesRate = wellSpeciesRate_[connection.wellSeqIndex];
+            for (std::size_t sIdx = 0; sIdx < nSpecies; ++sIdx) {
+                const Scalar delta = connection.rate * concentration_[sIdx][connection.cell];
+                speciesRate[sIdx].rate += delta;
+                if (connection.segment >= 0) {
+                    mSwSpeciesRate_[connection.wellSeqIndex][sIdx].rate[connection.segment]
+                        += delta;
+                }
+            }
+        }
+
+        // Equilibrate geochemical system
+        timer.reset();
+        for (const auto I : interiorDofs_) {
+            solveChemistry_(dt, I);
+        }
+        timing_.chemistry += timer.elapsed();
+    }
+
+    /*!
      * \brief Calculate the quantities of the interior cells that are constant during a time step
      *
      * \param elemCtx Reference to element context object
      */
-    void prepareTransportExplicit_(ElementContext& elemCtx)
+    void prepareInteriorCells_(ElementContext& elemCtx)
     {
         interiorDofs_.clear();
+        isInteriorDof_.assign(vol1_.size(), false);
         for (const auto& elem : elements(simulator_.gridView())) {
             if (elem.partitionType() != Dune::InteriorEntity) {
                 continue;
@@ -855,6 +1237,7 @@ protected:
             elemCtx.updateStencil(elem);
             const unsigned I = elemCtx.globalSpaceIndex(/*dofIdx=*/0, /*timeIdx=*/0);
             interiorDofs_.push_back(I);
+            isInteriorDof_[I] = true;
 
             // Update block quantities
             elemCtx.updateAllIntensiveQuantities();
@@ -882,6 +1265,166 @@ protected:
                 faceFluxes_[I].push_back({J, flux, isUp});
             }
         }
+    }
+
+    /*!
+     * \brief Solve the implicit transport system of all species
+     *
+     * With the reorder solver, the cells are solved in the order of the flow, see
+     * solveReordered(). If that fails on any rank, all ranks use the ISTL solver instead, since
+     * it communicates. With the ISTL solver, see solveIstl_().
+     *
+     * \param matrix Matrix shared by all species
+     * \param rhs Right-hand side of each species
+     * \param x Solution of each species, with the first guess on entry
+     * \returns Statistics of the reorder solver, or nothing if the ISTL solver was used
+     */
+    std::optional<UpwindTransportStatistics> solveTransport_(const TransportMatrix& matrix,
+                                                             std::vector<TransportVector>& rhs,
+                                                             std::vector<TransportVector>& x)
+    {
+        if (transportSolver_ == TransportSolver::Reorder) {
+            const std::vector<TransportVector> guess = x;
+            std::optional<UpwindTransportStatistics> statistics;
+            try {
+                statistics = solveReordered(matrix, rhs, x, reorderSettings);
+            } catch (const std::runtime_error& e) {
+                OpmLog::warning(fmt::format("Geochemistry reorder solver failed: {}", e.what()));
+            }
+            const auto& comm = simulator_.gridView().comm();
+            if (comm.min(static_cast<int>(statistics.has_value())) == 1) {
+                ++numReorderSolves_;
+                reorderLoopsTotal_ += statistics->numLoops;
+                reorderLoopsMax_ = std::max(reorderLoopsMax_, statistics->numLoops);
+                reorderLargestComponent_
+                    = std::max(reorderLargestComponent_, statistics->largestComponent);
+                reorderSweepsTotal_ += statistics->maxIterations;
+                reorderSweepsMax_ = std::max(reorderSweepsMax_, statistics->maxIterations);
+                return statistics;
+            }
+            OpmLog::warning("Geochemistry reorder solver failed, using the ISTL solver instead");
+            ++numIstlFallbacks_;
+            x = guess;
+        }
+        const IstlResult result = solveIstl_(matrix, rhs, x);
+        numIstlSolves_ += static_cast<int>(rhs.size());
+        numIstlIterationsTotal_ += result.iterations;
+        numIstlIterationsMax_ = std::max(numIstlIterationsMax_, result.maxIterations);
+        if (!result.converged) {
+            OpmLog::warning("Geochemistry transport: the ISTL solver did not converge");
+        }
+        return std::nullopt;
+    }
+
+    /*!
+     * \brief Solve the implicit transport system of all species with BiCGSTAB
+     *
+     * Preconditioned with ILU0 in serial and overlapping ILU0 in parallel, with a relative tolerance
+     * of istlTolerance. The first guess is the concentration on entry.
+     *
+     * \param matrix Matrix shared by all species
+     * \param rhs Right-hand side of each species, overwritten by the solver
+     * \param x Solution of each species, with the first guess on entry
+     * \returns Whether the solver converged for all species, and its iterations
+     */
+    IstlResult solveIstl_(const TransportMatrix& matrix,
+                          std::vector<TransportVector>& rhs,
+                          std::vector<TransportVector>& x) const
+    {
+        constexpr int verbosity = 0;
+        IstlResult istlResult;
+        auto addResult = [&istlResult](const Dune::InverseOperatorResult& result) {
+            istlResult.converged = istlResult.converged && result.converged;
+            istlResult.iterations += result.iterations;
+            istlResult.maxIterations = std::max(istlResult.maxIterations, result.iterations);
+        };
+#if HAVE_MPI
+        if (simulator_.gridView().comm().size() > 1) {
+            if constexpr (std::is_same_v<Grid, Dune::CpGrid>) {
+                PropertyTree prm;
+                prm.put("maxiter", istlMaxIterations);
+                prm.put("tol", istlTolerance);
+                prm.put("verbosity", verbosity);
+                prm.put("solver", std::string("bicgstab"));
+                prm.put("preconditioner.type", std::string("paroverilu0"));
+
+                using Communication = Dune::OwnerOverlapCopyCommunication<int, int>;
+                using Operator = Dune::OverlappingSchwarzOperator<TransportMatrix,
+                                                                  TransportVector,
+                                                                  TransportVector,
+                                                                  Communication>;
+                const auto& cellComm = simulator_.vanguard().grid().cellCommunication();
+                Operator op(matrix, cellComm);
+                auto dummyWeights = []() { return TransportVector(); };
+                Dune::FlexibleSolver<Operator> solver(op, cellComm, prm, dummyWeights, 0);
+                for (std::size_t q = 0; q < rhs.size(); ++q) {
+                    Dune::InverseOperatorResult result;
+                    solver.apply(x[q], rhs[q], result);
+                    addResult(result);
+                }
+                return istlResult;
+            } else {
+                throw std::logic_error("Grid not supported by the parallel geochemistry ISTL "
+                                       "solver");
+            }
+        }
+#endif
+        using Operator = Dune::MatrixAdapter<TransportMatrix, TransportVector, TransportVector>;
+        Operator op(matrix);
+        Dune::SeqScalarProduct<TransportVector> scalarProduct;
+        Dune::SeqILU<TransportMatrix, TransportVector, TransportVector> preconditioner(
+            matrix, 0, 1);
+        Dune::BiCGSTABSolver<TransportVector> solver(
+            op, scalarProduct, preconditioner, istlTolerance, istlMaxIterations, verbosity);
+        for (std::size_t q = 0; q < rhs.size(); ++q) {
+            Dune::InverseOperatorResult result;
+            solver.apply(x[q], rhs[q], result);
+            addResult(result);
+        }
+        return istlResult;
+    }
+
+    /*!
+     * \brief Create the matrix of the implicit transport, with the sparsity pattern of the grid
+     *
+     * Each cell is coupled to itself and to its neighbours, in both directions, since the
+     * direction of the flow changes. Only the entries of the upwind neighbours are nonzero, and the
+     * reorder solver ignores the others.
+     *
+     * \param elemCtx Reference to element context object
+     */
+    void createTransportMatrix_(ElementContext& elemCtx)
+    {
+        const std::size_t numDofs = vol1_.size();
+        std::vector<std::vector<unsigned>> neighbours(numDofs);
+        for (const auto& elem : elements(simulator_.gridView())) {
+            elemCtx.updateStencil(elem);
+            const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
+            for (unsigned primaryDofIdx = 0; primaryDofIdx < stencil.numPrimaryDof();
+                 ++primaryDofIdx) {
+                const unsigned I = stencil.globalSpaceIndex(primaryDofIdx);
+                for (unsigned dofIdx = 0; dofIdx < stencil.numDof(); ++dofIdx) {
+                    neighbours[I].push_back(stencil.globalSpaceIndex(dofIdx));
+                }
+            }
+        }
+
+        transportMatrix_
+            = std::make_unique<TransportMatrix>(numDofs, numDofs, TransportMatrix::random);
+        for (std::size_t I = 0; I < numDofs; ++I) {
+            auto& row = neighbours[I];
+            row.push_back(static_cast<unsigned>(I));
+            std::ranges::sort(row);
+            row.erase(std::ranges::unique(row).begin(), row.end());
+            transportMatrix_->setrowsize(I, row.size());
+        }
+        transportMatrix_->endrowsizes();
+        for (std::size_t I = 0; I < numDofs; ++I) {
+            for (const auto J : neighbours[I]) {
+                transportMatrix_->addindex(I, J);
+            }
+        }
+        transportMatrix_->endindices();
     }
 
     /*!
@@ -1034,14 +1577,14 @@ protected:
     }
 
     /*!
-     * \brief Calculate single well contribution in explicit reactive transport solver
+     * \brief Calculate single well contribution, shared by the transport solvers
      *
      * The rates are per time. They are used in each transport substep.
      *
      * \param well Reference to well object
      */
     template <class Well>
-    void speciesEquationWellExplicit_(const Well& well)
+    void computeWellTerms_(const Well& well)
     {
         // Get simulation wells
         const auto& eclWell = well.wellEcl();
@@ -1086,6 +1629,7 @@ protected:
             // Injection
             if (rate > 0.0) {
                 auto& source = getWellSource_(I);
+                source.waterInjectionRate += rate;
                 for (std::size_t sIdx = 0; sIdx < numSpecies(); ++sIdx) {
                     // Inject WSPECIES concentration
                     const Scalar inj_species_rate = rate * wspecies[sIdx];
@@ -1128,10 +1672,10 @@ protected:
     * \param initial_equil Optional bool indicating if this is an initial equilibrium solve
     * \param substepFraction Optional fraction of the time step at the end of the transport substep
     */
-    void speciesEquationChemistryExplicit_(Scalar dt,
-                                           unsigned I,
-                                           bool initial_equil = false,
-                                           Scalar substepFraction = 1.0)
+    void solveChemistry_(Scalar dt,
+                         unsigned I,
+                         bool initial_equil = false,
+                         Scalar substepFraction = 1.0)
     {
         // Ensure that dt == 0 for initial equilibration
         const double dt_geochem = initial_equil ? 0.0 : dt;
@@ -1306,11 +1850,13 @@ private:
     bool initialEquilibrationDone_{false};
 
     std::vector<unsigned> interiorDofs_;
+    std::vector<bool> isInteriorDof_; //!< Per cell, true for the interior cells of this rank
     std::vector<std::vector<FaceFlux>> faceFluxes_;
     std::vector<Scalar> volumeNew_;
     std::unordered_map<unsigned, WellSource> wellSources_;
     std::vector<ProducerConnection> producerConnections_;
     std::vector<SpeciesVector> concentrationNext_;
+    std::unique_ptr<TransportMatrix> transportMatrix_; //!< Matrix of the implicit transport
     std::vector<std::string> speciesNames_;
     std::vector<std::string> mineralNames_;
     std::vector<std::size_t> deckToSolverMineral_;
@@ -1325,12 +1871,25 @@ private:
     int numTimeSteps_ = 0;
     int numSubstepsTotal_ = 0;
     int numSubstepsMax_ = 0;
+    int numRankIterationsTotal_ = 0;
+    int numRankIterationsMax_ = 0;
+    int numReorderSolves_ = 0;
+    int reorderLoopsTotal_ = 0;
+    int reorderLoopsMax_ = 0;
+    int reorderLargestComponent_ = 0;
+    int reorderSweepsTotal_ = 0;
+    int reorderSweepsMax_ = 0;
+    int numIstlFallbacks_ = 0;
+    int numIstlSolves_ = 0;
+    int numIstlIterationsTotal_ = 0;
+    int numIstlIterationsMax_ = 0;
 
     Simulator& simulator_;
     const EclipseState& eclState_;
     const CartesianIndexMapper& cartMapper_;
     ElementChunks<GridView, Dune::Partitions::All> element_chunks_;
     GeochemistryModelParameters<Scalar> param_;
+    TransportSolver transportSolver_;
 };  // class GeochemistryModel
 } // namespace Opm
 
