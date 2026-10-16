@@ -19,6 +19,8 @@
 #ifndef GEOCHEMISTRY_MODEL_PARAMETERS_HPP
 #define GEOCHEMISTRY_MODEL_PARAMETERS_HPP
 
+#include <string>
+
 namespace Opm::Parameters
 {
 
@@ -27,6 +29,18 @@ template <class Scalar>
 struct GeochemistryTargetCfl
 {
     static constexpr Scalar value = 1.0;
+};
+
+//! Solver for the reactive transport: "explicit", "reorder" or "istl"
+struct GeochemistryTransportSolver
+{
+    static constexpr auto value = "explicit";
+};
+
+//! Use the volume balance of the flow simulator in the implicit transport
+struct GeochemistryVolumeCorrection
+{
+    static constexpr bool value = false;
 };
 
 } // namespace Opm::Parameters
@@ -46,6 +60,12 @@ struct GeochemistryModelParameters
 
     /// Target Courant number of the substeps of the explicit reactive transport
     Scalar target_cfl_;
+
+    /// Solver for the reactive transport: "explicit", "reorder" or "istl"
+    std::string transport_solver_;
+
+    /// Use the volume balance of the flow simulator in the implicit transport
+    bool volume_correction_;
 };
 
 } // namespace Opm

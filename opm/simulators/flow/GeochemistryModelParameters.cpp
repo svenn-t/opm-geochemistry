@@ -54,6 +54,9 @@ GeochemistryModelParameters<Scalar>::GeochemistryModelParameters()
                         limited));
     }
     target_cfl_ = limited;
+
+    transport_solver_ = Parameters::Get<Parameters::GeochemistryTransportSolver>();
+    volume_correction_ = Parameters::Get<Parameters::GeochemistryVolumeCorrection>();
 }
 
 template <class Scalar>
@@ -63,6 +66,13 @@ GeochemistryModelParameters<Scalar>::registerParameters()
     Parameters::Register<Parameters::GeochemistryTargetCfl<Scalar>>(
         "Target Courant number for the explicit reactive transport. The number of "
         "reactive transport substeps is calculated to keep the Courant number below this value");
+    Parameters::Register<Parameters::GeochemistryTransportSolver>(
+        "Solver for the reactive transport: 'explicit' (substeps with a Courant number below the "
+        "target), 'reorder' (implicit upwind, solved cell by cell in the order of the flow) or "
+        "'istl' (implicit upwind, solved with Dune-ISTL BiCGSTAB and ILU0)");
+    Parameters::Register<Parameters::GeochemistryVolumeCorrection>(
+        "Correct for a volume balance error in the flow simulator. Only valid for "
+        "--geochemistry-transport-solver=reorder or istl");
 }
 
 template struct GeochemistryModelParameters<double>;
