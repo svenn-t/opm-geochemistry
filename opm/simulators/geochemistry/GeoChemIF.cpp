@@ -74,6 +74,16 @@ int CGeoChemIF::getSolverCalls() const
 {
     return GCS_->solver_state_.noCalls_;
 }
+
+std::size_t CGeoChemIF::splayTreeLookups() const
+{
+    return splay_tree_lookups_;
+}
+
+std::size_t CGeoChemIF::splayTreeSolves() const
+{
+    return splay_tree_solves_;
+}
 bool CGeoChemIF::basis_species_added_by_geochem()
 {
     if (ICS_full_->species_added_after_input_file_.size() > 0)
@@ -341,6 +351,7 @@ void CGeoChemIF::SolveChem_I(double* ctot,
 
             // Note: After the function call, st_key is in a moved-from state.
             const bool keyDidNotExistBefore = st_tmp.SplayNewKey(st_key);
+            ++splay_tree_lookups_;
 
             // After splaying, the new key is at the root. However, if the key
             // did NOT exist before, the root of the splay tree should now
@@ -348,6 +359,7 @@ void CGeoChemIF::SolveChem_I(double* ctot,
             // Hence, we need to solve a new geochemical system...
             if (keyDidNotExistBefore)
             {
+                ++splay_tree_solves_;
                 const int new_mineral_key = GCS_->SolveChem_ST(
                     st_tmp.mineralCombinationKey(),
                     dt,

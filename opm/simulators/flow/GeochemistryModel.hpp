@@ -21,6 +21,7 @@
 #ifndef GEOCHEMISTRY_MODEL_HPP
 #define GEOCHEMISTRY_MODEL_HPP
 
+#include <dune/common/timer.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/partitionset.hh>
 #include <dune/istl/bvector.hh>
@@ -93,6 +94,13 @@ class GeochemistryModel
         unsigned neighbour; //!< Cell on the other side of the face
         Scalar flux; //!< Water flux out of the cell, in surface volume per time
         bool isUp; //!< True if the cell itself is upstream
+    };
+    struct Timing
+    {
+        double total = 0.0; //!< All of beginTimeStep() and endTimeStep()
+        double transportSetup = 0.0; //!< Well terms, fluxes, volumes and number of substeps
+        double transportUpdate = 0.0; //!< Upwind update of the species
+        double chemistry = 0.0; //!< Geochemistry solves, including the initial equilibration
     };
 
 public:
@@ -250,6 +258,7 @@ public:
         if (!eclState_.runspec().geochem().enabled()) {
             return;
         }
+        Dune::Timer timer;
 
         // Store variables from previous time step
         updateStorageCache();
@@ -258,6 +267,7 @@ public:
         if (!initialEquilibrationDone_) {
             initialEquilibration_();
         }
+        timing_.total += timer.elapsed();
     }
 
     /*!
@@ -270,9 +280,51 @@ public:
         if (!eclState_.runspec().geochem().enabled()) {
             return;
         }
+        Dune::Timer timer;
 
         // Reactive transport
         advanceSpeciesFieldsExplicit();
+
+        timing_.total += timer.elapsed();
+    }
+
+    /*!
+     * \brief Geochemistry section of the timing summary at the end of the simulation
+     *
+     * \returns The section, or an empty string if GEOCHEM is not activated
+     *
+     * \note The times are those of this rank, like the rest of the summary, which is written by the
+     * output rank. They are part of its "Pre/post step" time.
+     */
+    std::string timingSummary() const
+    {
+        if (!eclState_.runspec().geochem().enabled()) {
+            return {};
+        }
+
+        const auto& t = timing_;
+        std::string summary = "Geochemistry (part of pre/post step)\n";
+        summary += fmt::format("Simulation time:            {:9.2f} s\n", t.total);
+        summary += fmt::format("  Transport:                {:9.2f} s\n",
+                               t.transportSetup + t.transportUpdate);
+        summary += fmt::format("    Setup:                    {:7.2f} s\n", t.transportSetup);
+        summary += fmt::format("    Update:                   {:7.2f} s\n", t.transportUpdate);
+        summary += fmt::format("  Chemistry:                {:9.2f} s\n", t.chemistry);
+        if (const auto lookups = geoChemInterface_->splayTreeLookups(); lookups > 0) {
+            const auto solves = geoChemInterface_->splayTreeSolves();
+            const double skipped = 100.0 * static_cast<double>(lookups - solves) / lookups;
+            summary += fmt::format(
+                "Splay tree lookups:      {:9} ({:.1f} % of chemistry solves skipped)\n",
+                lookups,
+                skipped);
+        }
+        const double avgSubsteps
+            = numTimeSteps_ > 0 ? static_cast<double>(numSubstepsTotal_) / numTimeSteps_ : 0.0;
+        summary += fmt::format("Explicit substeps:       {:9} (avg {:.1f}, max {} per time step)\n",
+                               numSubstepsTotal_,
+                               avgSubsteps,
+                               numSubstepsMax_);
+        return summary;
     }
 
     /*!
@@ -592,6 +644,7 @@ protected:
     */
     void initialEquilibration_()
     {
+        Dune::Timer timer;
         ElementContext elemCtx(simulator_);
         for (const auto& elem : elements(simulator_.gridView())) {
             if (elem.partitionType() != Dune::InteriorEntity) {
@@ -605,6 +658,7 @@ protected:
 
         // The overlap cells, which are owned by other ranks, must have the equilibrated values too
         communicateConcentrations_(concentrationInitial_);
+        timing_.chemistry += timer.elapsed();
 
         initialEquilibrationDone_ = true;
     }
@@ -744,6 +798,7 @@ protected:
         mSwSpeciesRate_.reserve(wellPtrs.size());
 
         // Simulator information
+        Dune::Timer timer;
         ElementContext elemCtx(simulator_);
         const Scalar dt = elemCtx.simulator().timeStepSize();
 
@@ -762,16 +817,25 @@ protected:
             concentration_[sIdx] = concentrationInitial_[sIdx];
         }
         const int numSubsteps = numberOfSubsteps_(dt);
+        ++numTimeSteps_;
+        numSubstepsTotal_ += numSubsteps;
+        numSubstepsMax_ = std::max(numSubstepsMax_, numSubsteps);
+        timing_.transportSetup += timer.elapsed();
+
         for (int substep = 0; substep < numSubsteps; ++substep) {
+            timer.reset();
             transportSubstepExplicit_(substep, numSubsteps, dt / numSubsteps);
+            timing_.transportUpdate += timer.elapsed();
 
             // Equilibrate geochemical system
+            timer.reset();
             const Scalar substepFraction = static_cast<Scalar>(substep + 1) / numSubsteps;
             for (const auto I : interiorDofs_) {
                 speciesEquationChemistryExplicit_(dt / numSubsteps, I, /*initial_equil=*/false,
                                                   substepFraction);
             }
             communicateConcentrations_(concentration_);
+            timing_.chemistry += timer.elapsed();
         }
     }
 
@@ -1256,6 +1320,11 @@ private:
 
     std::unordered_map<int, std::vector<WellTracerRate<Scalar>>> wellSpeciesRate_;
     std::unordered_map<int, std::vector<MSWellTracerRate<Scalar>>> mSwSpeciesRate_;
+
+    Timing timing_;
+    int numTimeSteps_ = 0;
+    int numSubstepsTotal_ = 0;
+    int numSubstepsMax_ = 0;
 
     Simulator& simulator_;
     const EclipseState& eclState_;

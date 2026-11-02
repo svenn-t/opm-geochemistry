@@ -118,6 +118,16 @@ public:
     }
 
     /*!
+     * \brief Geochemistry section appended to the timing summary at the end of the simulation
+     *
+     * \returns The section, empty if GEOCHEM is not activated
+     */
+    std::string extraTrailerSummary() const
+    {
+        return geochemistryModel_.timingSummary();
+    }
+
+    /*!
     * \brief Get const reference to geochemistry model
     *
     * \returns Reference to geochemistry model

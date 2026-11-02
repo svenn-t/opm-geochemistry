@@ -70,6 +70,9 @@ class CGeoChemIF
     void printSplayTreeInfo() const;
     int getSolverCalls() const;
 
+    [[nodiscard]] std::size_t splayTreeLookups() const;
+    [[nodiscard]] std::size_t splayTreeSolves() const;
+
     [[nodiscard]] std::size_t numberOfSolutions() const;
     [[nodiscard]] std::size_t numberOfBasisSpecies() const;
     [[nodiscard]] std::size_t numberOfAqueousBasisSpecies() const;
@@ -175,6 +178,9 @@ class CGeoChemIF
     std::vector<double> dc_min_;
     std::vector<double> c_flux_;
     std::vector<double> c_min_old_;
+
+    std::size_t splay_tree_lookups_{0};
+    std::size_t splay_tree_solves_{0};
 
   protected:
     void set_input_reader_keywords();
